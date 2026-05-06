@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "space_agent",
+  "project_id": "0ec5424d-f6d4-46e4-bf97-bdbc8536dac2"
+}
