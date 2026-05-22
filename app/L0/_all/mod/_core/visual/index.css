@@ -6,6 +6,7 @@
 @import "./forms/dialog.css";
 @import "./conversation/agent-thread.css";
 @import "./surfaces/cards.css";
+@import "./mobile.css";
 
 /*
  * Space Agent glass stays shadowless across authenticated app surfaces.

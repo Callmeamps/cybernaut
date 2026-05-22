@@ -1,0 +1,233 @@
+/*
+ * Mobile-first responsive styles for Space Agent Lite
+ *
+ * Breakpoints:
+ *   <= 480px  — phone portrait (primary mobile target)
+ *   <= 768px  — phone landscape / small tablet
+ *   <= 1024px — tablet
+ */
+
+/* ============================================================
+   PHONE PORTRAIT (<= 480px)
+   ============================================================ */
+@media (max-width: 480px) {
+  /* --- Onscreen agent: full-screen panel --- */
+  .onscreen-agent-root {
+    --onscreen-agent-avatar-size: 52px;
+    --onscreen-agent-panel-width: 100vw;
+    --onscreen-agent-compact-panel-width: 100vw;
+    --onscreen-agent-gap: 8px;
+    --onscreen-agent-ui-bubble-max-width: calc(100vw - 32px);
+    --onscreen-agent-history-resize-hit-area: 24px;
+  }
+
+  /* Panel goes full-screen when expanded */
+  .onscreen-agent-shell.is-full .onscreen-agent-panel,
+  .onscreen-agent-shell:not(.is-compact) .onscreen-agent-panel {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    z-index: 2147482001;
+  }
+
+  /* Hide the floating avatar when panel is open */
+  .onscreen-agent-shell:not(.is-compact) .onscreen-agent-cluster {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Composer full-width */
+  .onscreen-agent-shell .onscreen-agent-composer {
+    padding: 8px 12px;
+  }
+
+  .onscreen-agent-composer-input-wrap textarea {
+    min-height: 44px;
+    font-size: 16px; /* prevents iOS zoom on focus */
+  }
+
+  /* Touch-friendly scroll area */
+  .onscreen-agent-history {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Message bubbles take full width */
+  .onscreen-agent-root .message-row.user .message-bubble {
+    max-width: calc(100% - 32px);
+  }
+
+  .onscreen-agent-root .message-row.assistant .message-bubble {
+    max-width: 100%;
+  }
+
+  /* --- Topbar / menu --- */
+  .onscreen-menu-bar {
+    padding-left: max(env(safe-area-inset-left, 0px), 8px);
+    padding-right: max(env(safe-area-inset-right, 0px), 8px);
+  }
+
+  .space-topbar.onscreen-menu-shell {
+    height: calc(env(safe-area-inset-top, 0px) + 40px);
+    min-height: calc(env(safe-area-inset-top, 0px) + 40px);
+    padding: calc(env(safe-area-inset-top, 0px) + 4px) 8px 4px;
+  }
+
+  .onscreen-menu-shell .space-topbar-button {
+    min-height: 40px;
+    min-width: 40px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .onscreen-menu-shell .space-topbar-button--icon {
+    width: 40px;
+    min-width: 40px;
+  }
+
+  /* --- Dialogs --- */
+  .chat-dialog {
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    margin: 8px;
+    border-radius: 12px;
+  }
+
+  .dialog-card {
+    padding: 14px;
+  }
+
+  .dialog-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .dialog-actions .primary-button,
+  .dialog-actions .secondary-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* --- Buttons: 44px touch targets --- */
+  .primary-button,
+  .secondary-button,
+  .confirm-button,
+  .danger {
+    min-height: 44px;
+    padding: 0.6rem 1rem;
+    font-size: 15px;
+  }
+
+  /* --- Dashboard --- */
+  .dashboard-view {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .dashboard-shell {
+    gap: 1rem;
+  }
+
+  .space-action-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  /* --- Cards --- */
+  .space-card {
+    padding: 12px;
+  }
+
+  /* --- Popovers --- */
+  .space-popover {
+    max-width: calc(100vw - 16px);
+    min-width: min(200px, calc(100vw - 16px));
+  }
+
+  .space-popover-action {
+    min-height: 44px;
+  }
+
+  /* --- Toast --- */
+  .space-toast-stack {
+    right: 8px;
+    left: 8px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+    width: auto;
+  }
+}
+
+/* ============================================================
+   SMALL TABLET / PHONE LANDSCAPE (<= 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+  .onscreen-agent-root {
+    --onscreen-agent-panel-width: min(calc(100vw - 80px), 28rem);
+    --onscreen-agent-compact-panel-width: min(calc(100vw - 80px), 22rem);
+  }
+
+  .router-stage-inner {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .dashboard-view {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .space-action-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}
+
+/* ============================================================
+   TABLET (<= 1024px)
+   ============================================================ */
+@media (max-width: 1024px) {
+  .router-stage-inner {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   TOUCH DEVICE UTILITIES
+   ============================================================ */
+@media (pointer: coarse) {
+  /* Larger touch targets on touch devices */
+  .onscreen-agent-history-resize-grip {
+    height: 24px;
+  }
+
+  .space-popover-action {
+    min-height: 44px;
+  }
+
+  /* Prevent text selection on drag */
+  .onscreen-agent-shell {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Allow text selection in message content */
+  .onscreen-agent-shell .message-content {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
+/* ============================================================
+   SAFE AREA SUPPORT (notch phones)
+   ============================================================ */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .onscreen-agent-shell .onscreen-agent-composer {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .router-stage-inner {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}

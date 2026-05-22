@@ -1,147 +1,93 @@
-<p align="center">
-  <a href="https://space-agent.ai"><img src="./.github/readme-banner-thin.svg" alt="Space Agent banner" /></a>
-</p>
+# Space Agent Lite
 
-<p align="center">
-<br>
-  <a href="https://space-agent.ai"><img alt="Try Live Now!" src="./.github/readme-try-live-now.svg" /></a>
-  <br />
-  <br />
-  <a href="https://github.com/agent0ai/space-agent/releases/latest"><img alt="Run local App" height="50" src="https://img.shields.io/badge/Run%20local%20App-59F0A8?style=for-the-badge&labelColor=07111F&color=59F0A8" /></a>
-  <a href="#host"><img alt="Host yourself" height="50" src="https://img.shields.io/badge/Host%20yourself-FFFFFF?style=for-the-badge&labelColor=07111F&color=FFFFFF" /></a>
-</p>
+A lean, mobile-friendly AI agent runtime. Fork of [space-agent](https://github.com/agent0ai/space-agent).
 
-<h3 align="center">Created by <a href="https://agent-zero.ai">Agent Zero</a>.</h3>
+The agent lives in your browser and can build tools, browse the web, and execute code on the fly. Connect it to any OpenAI-compatible API (OpenRouter, OpenAI, local Ollama, etc).
 
-<p align="center">
-  <a href="https://discord.gg/B8KZKNsPpj"><img alt="Discord" src="https://img.shields.io/badge/Discord-5865F2?style=flat&logo=discord&logoColor=white" /></a>
-  &nbsp;
-  <a href="https://x.com/Agent0ai"><img alt="X" src="https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white" /></a>
-  &nbsp;
-  <a href="https://www.youtube.com/@AgentZeroFW"><img alt="YouTube" src="https://img.shields.io/badge/YouTube-FF0000?style=flat&logo=youtube&logoColor=white" /></a>
-  &nbsp;
-  <a href="https://deepwiki.com/agent0ai/space-agent"><img alt="Ask DeepWiki" src="https://deepwiki.com/badge.svg" /></a>
-</p>
-
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=CNRHxEZ8yqs"><img src="./.github/thumbnail.webp" alt="Watch Space Agent on YouTube" width="560" /></a>
-</p>
-
-## Why Space Agent Is Different
-
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-  <tr>
-    <td valign="top" width="50%">
-      <strong>The agent reshapes the interface</strong><br />
-      Ask for a page, tool, widget, or workflow and the agent can build it straight into the running workspace while you work.
-    </td>
-    <td valign="top" width="50%">
-      <strong>Endless possibilities</strong><br />
-      The agent is not trapped inside a fixed product surface. It can develop the capabilities it needs from within the system itself and keep extending the Space toward whatever the user can imagine.
-    </td>
-  </tr>
-  <tr>
-    <td align="center" valign="top" width="50%">
-      <img src="packaging/resources/icons/source/space-agent-icon-256.webp" alt="Space Agent app icon" width="120" />
-    </td>
-    <td valign="top" width="50%">
-      <strong>The agent lives in the frontend runtime</strong><br />
-      Space Agent runs in the browser layer itself, whether you open it in a tab or through the desktop app, so the agent can work directly with the same framework, modules, spaces, and UI it is reshaping.
-    </td>
-  </tr>
-  <tr>
-    <td valign="top" width="50%">
-      <strong>Text-based agent</strong><br />
-      New capabilities can live in simple <code>SKILL.md</code> files that the agent can write and extend itself in plain text.
-    </td>
-    <td valign="top" width="50%">
-      <strong>Token-efficient execution</strong><br />
-      No bulky tool-call JSON. When action is needed, the agent can stay in plain text and plain JavaScript inside the same message.
-    </td>
-  </tr>
-  <tr>
-    <td valign="top" width="50%">
-      <strong>Puzzle-piece modularity</strong><br />
-      The core stays small. Most of Space Agent is made of modular pieces that can be added, removed, or swapped cleanly instead of being welded into one rigid app.
-    </td>
-    <td align="center" valign="top" width="50%">
-      <img src="app/L0/_all/mod/_core/visual/res/chat/admin/helmet_no_bg_256.webp" alt="Space Agent helmet" height="112" />
-    </td>
-  </tr>
-  <tr>
-    <td valign="top" width="50%">
-      <strong>Personal to hierarchical</strong><br />
-      Use Space Agent as a completely personal assistant, or organize it into a hierarchical system of users and groups as the scope grows.
-    </td>
-    <td valign="top" width="50%">
-      <strong>Per-user work, group sharing</strong><br />
-      Users can build in their own layer without affecting anyone else, then groups can share tools, workflows, and behavior across teams when they are ready.
-    </td>
-  </tr>
-  <tr>
-    <td align="center" valign="top" width="50%">
-      <img src="app/L0/_all/mod/_core/visual/res/engineer/astronaut_red_512h.webp" alt="Space Agent astronaut" height="148" />
-    </td>
-    <td valign="top" width="50%">
-      <strong>Persistent admin and time travel</strong><br />
-      When something breaks, admin mode gives you a stable control plane, and Git-backed history lets you roll back user or group changes without taking everyone down with you.
-    </td>
-  </tr>
-</table>
-
-## Try it in 30 seconds
-
-# [space-agent.ai](https://space-agent.ai)
-
-Try our demo server with guest account.
-
-## Run it yourself
-
-### The desktop app
-
-Grab the latest build from [GitHub Releases](https://github.com/agent0ai/space-agent/releases/latest). It runs everything as one app. No terminal required.
-
-### A real server, for you or your team
-
-<a id="host"></a>
+## Quick Start
 
 ```bash
-git clone https://github.com/agent0ai/space-agent.git
-cd space-agent
+./setup.sh --user admin --pass mypassword
+```
+
+This installs dependencies, creates your account, and starts the server. Then open `http://localhost:3000` in your browser.
+
+### Manual setup
+
+```bash
 npm install
-
-# create yourself an admin
-node space user create admin --password "change-me-now" --full-name "Admin" --groups _admin
-
-# start the server
 node space serve
 ```
 
-### For development
+Open `http://localhost:3000` and create your account through the browser UI.
+
+## Setup Script
 
 ```bash
-npm run dev # server with auto-reload
+./setup.sh --user alice --pass secret       # create user + start
+./setup.sh --user alice --pass secret --port 8080 --host 0.0.0.0  # custom port
+./setup.sh --start                          # just start (user already exists)
+./setup.sh --no-start --no-install          # just create user
 ```
 
-Open the checked-in VS Code launch entry `Dev Server (npm run dev)` when you want breakpoints in `server/` code. It launches the same watcher and auto-attaches to the spawned `node space serve` process across restarts.
+## Configuration
 
-### For production
+Edit `.env` in the project root:
 
 ```bash
-node space set CUSTOMWARE_PATH=/srv/space/customware
-node space supervise HOST=0.0.0.0 PORT=3000 # zero downtime auto-update
+PORT=3000
+HOST=127.0.0.1
+SINGLE_USER_APP=true
 ```
 
-Run `node space help` to see the full command surface and built-in help for each from [`commands/params.yaml`](./commands/params.yaml).
+Agent settings (API key, model, endpoint) are configured in the browser UI under Settings.
 
-## AI-driven development and documentation
+## Agent API
 
-Space Agent is developed by AI agents, including its documentation.
+Connect external coding agents (Claude, GPT, Cursor, etc.) via the REST API:
 
-The framework keeps a hierarchical `AGENTS.md` instruction system, plus skills and focused docs, so agents can understand ownership, architecture, workflows, and local implementation rules while they build and maintain the system autonomously.
+```bash
+# Check agent status
+curl http://localhost:3000/api/agent_status
 
-DeepWiki covers the human-readable side of that same knowledge base. Together, this keeps the codebase and its documentation prepared for autonomous agent work, and helps the documentation keep up with the pace of AI-driven development instead of falling behind.
+# Send a message (streaming)
+curl -N -X POST http://localhost:3000/api/agent_chat \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"Hello"}]}'
 
-If you want the deep tour, start here:
+# Send a message (non-streaming)
+curl -X POST http://localhost:3000/api/agent_chat \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"Hello"}],"stream":false}'
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/agent0ai/space-agent)
+# Override model or endpoint per request
+curl -N -X POST http://localhost:3000/api/agent_chat \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"Hello"}],"model":"gpt-4o","api_key":"sk-..."}'
+
+# List available skills
+curl http://localhost:3000/api/agent_skills
+```
+
+## Architecture
+
+- **Browser-first**: The app is a browser runtime. The server is thin infrastructure.
+- **No build step**: ES modules served directly. No bundler, no transpiler.
+- **Alpine.js**: Lightweight reactivity for the UI.
+- **Extension system**: `<x-extension>` HTML seams and `space.extend()` JS hooks for composition.
+- **Mobile-friendly**: Responsive CSS with full-screen chat on phones, 44px touch targets, safe-area support.
+
+## Project Structure
+
+```
+space-agent-lite/
+  setup.sh                 Setup script (install + user creation)
+  space, space.js          CLI entry point
+  app/L0/_all/mod/_core/   Browser modules (framework, agent, visual, skills)
+  server/                  Node.js server (API, auth, routing)
+  commands/                CLI commands (serve, help, version)
+```
+
+## License
+
+MIT
