@@ -19,6 +19,10 @@ function decodeBase64Url(value) {
   return Buffer.from(String(value || ""), "base64url");
 }
 
+function randomHex(byteCount) {
+  return randomBytes(byteCount).toString("hex");
+}
+
 function setPermissionsIfPossible(targetPath, mode) {
   try {
     fs.chmodSync(targetPath, mode);
@@ -26,6 +30,19 @@ function setPermissionsIfPossible(targetPath, mode) {
     if (error.code !== "ENOENT") {
       throw error;
     }
+  }
+}
+
+function cleanStaleTempFiles(dataDir) {
+  try {
+    const entries = fs.readdirSync(dataDir);
+    for (const entry of entries) {
+      if (entry.startsWith(".auth_keys.tmp.")) {
+        fs.unlinkSync(path.join(dataDir, entry));
+      }
+    }
+  } catch {
+    // Ignore cleanup failures — benign
   }
 }
 
@@ -155,18 +172,14 @@ function loadAuthKeys(projectRoot, env = process.env) {
   }
 
   const payload = createAuthKeysPayload();
-  const sourceText = `${JSON.stringify(payload, null, 2)}\n`;
 
   try {
-    fs.writeFileSync(filePath, sourceText, {
-      encoding: "utf8",
-      flag: "wx",
-      mode: 0o600
-    });
-    setPermissionsIfPossible(filePath, 0o600);
+    // Atomic write: temp file → rename. Eliminates window where file exists
+    // with wrong permissions if the process crashes between write and chmod.
+    writeAuthKeysAtomically(filePath, payload);
 
     return {
-      ...parseAuthKeys(sourceText, filePath),
+      ...readExistingAuthKeys(filePath),
       created: true
     };
   } catch (error) {
@@ -175,10 +188,41 @@ function loadAuthKeys(projectRoot, env = process.env) {
     }
   }
 
+  // Another process created it concurrently — read what they wrote
   return {
     ...readExistingAuthKeys(filePath),
     created: false
   };
+}
+
+/**
+ * Write auth keys to a temp file then atomically rename into place.
+ * This eliminates the window where auth_keys.json exists with wrong permissions.
+ */
+function writeAuthKeysAtomically(filePath, payload) {
+  const dataDir = path.dirname(filePath);
+  const tempPath = path.join(dataDir, `.auth_keys.tmp.${randomHex(8)}`);
+
+  try {
+    // Clean up any stale temp files first
+    cleanStaleTempFiles(dataDir);
+
+    // Write to temp file with correct permissions from the start
+    fs.writeFileSync(tempPath, JSON.stringify(payload, null, 2) + "\n", {
+      encoding: "utf8",
+      flag: "wx",
+      mode: 0o600
+    });
+
+    // Atomically rename temp → final. On POSIX systems this is atomic
+    // as long as tempPath and filePath are on the same filesystem.
+    fs.renameSync(tempPath, filePath);
+  } catch (error) {
+    // Clean up temp file on failure
+    setPermissionsIfPossible(tempPath, 0o600);
+    try { fs.unlinkSync(tempPath); } catch { /* ignore */ }
+    throw error;
+  }
 }
 
 export {

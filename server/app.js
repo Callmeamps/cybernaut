@@ -22,6 +22,7 @@ import { JobRunner } from "./jobs/job_runner.js";
 import { createLocalMutationSync } from "./runtime/request_mutations.js";
 import { sendJson } from "./router/responses.js";
 import { createRequestHandler } from "./router/router.js";
+import { createAgentChatRateLimiter } from "./lib/rate_limit.js";
 
 function resolveBrowserHost(host) {
   if (host === "0.0.0.0" || host === "::" || host === "[::]") {
@@ -202,6 +203,9 @@ async function createAgentServer(overrides = {}) {
     });
 
   const apiRegistry = await loadApiRegistry(apiDir);
+  const rateLimitMiddleware = overrides.rateLimitMiddleware ||
+    createAgentChatRateLimiter({ stateSync });
+
   const requestHandler = createRequestHandler({
     apiDir,
     apiRegistry,
@@ -210,6 +214,7 @@ async function createAgentServer(overrides = {}) {
     assetDir,
     mutationSync,
     pagesDir,
+    rateLimitMiddleware,
     runtimeParams,
     stateSystem,
     stateSync,

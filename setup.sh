@@ -24,7 +24,6 @@ Usage: ./setup.sh [options]
 
 Options:
   --user <name>       Username (default: $DEFAULT_USER)
-  --pass <password>   Password (required on first run)
   --port <port>       Server port (default: $DEFAULT_PORT)
   --host <host>       Server host (default: $DEFAULT_HOST)
   --no-install        Skip npm install
@@ -32,10 +31,13 @@ Options:
   --start             Start the server after setup (default if user exists)
   -h, --help          Show this help
 
+Environment:
+  SPACE_INITIAL_PASSWORD  Password for initial user (preferred for non-interactive/CI use)
+  SPACE_INITIAL_USER       Username for initial user (default: $DEFAULT_USER)
+
 Examples:
-  ./setup.sh --user alice --pass mypassword
-  ./setup.sh --user admin --pass secret --port 8080 --host 0.0.0.0
-  ./setup.sh --start   # just start the server
+  SPACE_INITIAL_PASSWORD=secret ./setup.sh --user alice
+  ./setup.sh --user admin  # interactive password prompt
 EOF
   exit 0
 }
@@ -45,7 +47,7 @@ warn() { echo -e "${YELLOW}[setup]${NC} $*"; }
 err() { echo -e "${RED}[setup]${NC} $*" >&2; }
 
 # Parse args
-USERNAME="$DEFAULT_USER"
+USERNAME="${SPACE_INITIAL_USER:-$DEFAULT_USER}"
 PASSWORD="$DEFAULT_PASS"
 PORT="$DEFAULT_PORT"
 HOST="$DEFAULT_HOST"
@@ -55,7 +57,6 @@ SKIP_START=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --user) USERNAME="$2"; shift 2 ;;
-    --pass) PASSWORD="$2"; shift 2 ;;
     --port) PORT="$2"; shift 2 ;;
     --host) HOST="$2"; shift 2 ;;
     --no-install) SKIP_INSTALL=true; shift ;;
@@ -89,35 +90,61 @@ else
   log ".env already exists, skipping."
 fi
 
-# Step 3: Create user if password is provided
+# Step 3: Resolve password — env var preferred, TTY prompt fallback
+if [[ -n "$SPACE_INITIAL_PASSWORD" ]]; then
+  PASSWORD="$SPACE_INITIAL_PASSWORD"
+elif [[ -t 0 ]]; then
+  log "Prompting for password (no --pass flag or SPACE_INITIAL_PASSWORD set)..."
+  read -rsp "Enter password for '$USERNAME': " PASSWORD
+  echo ""
+else
+  warn "No password configured. To create the initial user, either:"
+  warn "  1. Set SPACE_INITIAL_PASSWORD env var: SPACE_INITIAL_PASSWORD=secret ./setup.sh"
+  warn "  2. Run interactively: ./setup.sh (will prompt)"
+  warn "Skipping user creation."
+  PASSWORD=""
+fi
+
+# Step 3b: Create user if password is available
 if [[ -n "$PASSWORD" ]]; then
   log "Creating user '$USERNAME'..."
 
-  node -e "
-    import('./server/lib/auth/user_manage.js')
-      .then(async ({ createUser }) => {
-        try {
-          await createUser(import.meta.dirname, '$USERNAME', '$PASSWORD');
-          console.log('User created: $USERNAME');
-        } catch (e) {
-          if (e.message.includes('already exists')) {
-            console.log('User already exists: $USERNAME');
-          } else {
-            console.error('Failed to create user:', e.message);
-            process.exit(1);
-          }
+  log "Creating user '$USERNAME'..."
+
+  # Write password to a secure temp file to avoid passing it via command line.
+  # This prevents the password from appearing in `ps aux` output.
+  TMPPASS=$(mktemp)
+  chmod 600 "$TMPPASS"
+  printf '%s' "$PASSWORD" > "$TMPPASS"
+
+  node --input-type=module < "$TMPPASS" \
+    -e "
+      import { readFileSync } from 'node:fs';
+      import { createUser } from './server/lib/auth/user_manage.js';
+      const password = readFileSync('/dev/stdin', 'utf8').trim();
+      try {
+        await createUser(import.meta.dirname, '$USERNAME', password);
+        console.log('User created: $USERNAME');
+      } catch (e) {
+        if (e.message.includes('already exists')) {
+          console.log('User already exists: $USERNAME');
+        } else {
+          console.error('Failed to create user:', e.message);
+          process.exit(1);
         }
-      })
-      .catch(e => {
-        console.error('Failed to load auth module:', e.message);
-        process.exit(1);
-      });
-  " 2>&1
+      }
+    " 2>&1; RESULT=$?
+
+  shred -u "$TMPPASS" 2>/dev/null || rm -f "$TMPPASS"
+
+  if [[ $RESULT -ne 0 ]]; then
+    err "User setup failed."
+    exit 1
+  fi
 
   log "User setup complete."
 else
-  warn "No --pass provided. You can create a user later with:"
-  warn "  ./setup.sh --user <name> --pass <password>"
+  warn "You can create a user later with: SPACE_INITIAL_PASSWORD=secret ./setup.sh --user <name>"
 fi
 
 # Step 4: Start server

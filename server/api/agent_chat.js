@@ -81,8 +81,8 @@ function buildUpstreamHeaders(config) {
   }
 
   if (config.apiEndpoint.includes("openrouter.ai")) {
-    headers["HTTP-Referer"] = "https://space-agent-lite";
-    headers["X-OpenRouter-Title"] = "Space Agent Lite";
+    headers["HTTP-Referer"] = "https://cybernaut";
+    headers["X-OpenRouter-Title"] = "Cybernaut";
   }
 
   return headers;

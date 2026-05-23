@@ -1,12 +1,12 @@
 {
-  "name": "space-agent-lite",
+  "name": "cybernaut",
   "version": "0.1.0",
   "private": true,
-  "description": "Lean, mobile-friendly AI agent runtime. Fork of space-agent.",
+  "description": "A lean, mobile-friendly AI agent runtime built on space-agent.",
   "author": "",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git+https://github.com/callmeamps/cybernaut.git"
   },
   "scripts": {
     "start": "node space serve",

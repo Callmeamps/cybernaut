@@ -1,5 +1,6 @@
 import { URL } from "node:url";
 
+import { createAgentChatRateLimiter } from "../lib/rate_limit.js";
 import {
   createRequestContext,
   ensureAuthenticatedRequestContext,
@@ -61,8 +62,27 @@ function getAllowedMethods(apiModule) {
 async function handleApiModuleRequest(req, res, requestUrl, apiModule, contextOptions) {
   const methodName = String(req.method || "GET").toUpperCase();
   const handler = apiModule.handlers[methodName.toLowerCase()];
+  const { rateLimitMiddleware, ...restContextOptions } = contextOptions ?? {};
 
   applyApiCorsHeaders(res);
+
+  // Apply rate limiting for agent_chat (cost attack mitigation)
+  if (apiModule.endpointName === "agent_chat" && rateLimitMiddleware) {
+    const result = rateLimitMiddleware({ req, res, user: restContextOptions.user });
+
+    if (!result.allowed) {
+      res.writeHead(429, {
+        "Content-Type": "application/json",
+        "Retry-After": String(Math.ceil(result.retryAfterMs / 1000)),
+        "X-RateLimit-Limit": String(result.limit),
+        "X-RateLimit-Remaining": "0"
+      });
+      res.end(JSON.stringify({
+        error: `Rate limit exceeded. Try again in ${Math.ceil(result.retryAfterMs / 1000)} seconds.`
+      }));
+      return;
+    }
+  }
 
   if (!handler) {
     sendJson(
@@ -94,7 +114,7 @@ async function handleApiModuleRequest(req, res, requestUrl, apiModule, contextOp
 
   try {
     result = await handler({
-      ...contextOptions,
+      ...restContextOptions,
       body: parsedRequest.body,
       endpointName: apiModule.endpointName,
       headers: req.headers,
@@ -103,7 +123,7 @@ async function handleApiModuleRequest(req, res, requestUrl, apiModule, contextOp
       query: params,
       rawBody: parsedRequest.rawBody,
       req,
-      requestContext: contextOptions.requestContext,
+      requestContext: restContextOptions.requestContext,
       requestUrl,
       res
     });
@@ -290,6 +310,7 @@ function createRequestHandler(options) {
     port,
     projectVersion: providedProjectVersion,
     projectRoot,
+    rateLimitMiddleware,
     runtimeParams,
     stateSystem,
     stateSync,
@@ -347,16 +368,18 @@ function createRequestHandler(options) {
           appDir,
           auth,
           assetDir,
-          watchdog,
           host,
           mutationSync,
           port,
           projectRoot,
+          rateLimitMiddleware,
           runtimeParams,
           stateSystem,
+          stateSync,
           ensureUserFileIndex,
           requestContext,
-          user: requestContext.user
+          user: requestContext.user,
+          watchdog
         });
         return;
       }
