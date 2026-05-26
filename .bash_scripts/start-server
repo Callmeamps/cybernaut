@@ -1,0 +1,6 @@
+#!/bin/bash
+# Starts the local dev server on default port.
+# Usage: ./start-server [port]
+PORT=${1:-3000}
+echo "Starting server on http://localhost:$PORT"
+node space serve --port $PORT

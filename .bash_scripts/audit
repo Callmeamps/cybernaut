@@ -1,0 +1,17 @@
+#!/bin/bash
+# Outputs a quick health audit of the repo.
+
+echo "=== Beads Status ==="
+cd /home/callmeamps/Projects/Cybernaut/cybernaut
+bd ready | grep . || echo "✨ No ready work"
+bd blocked | grep . || echo "✨ No blocked work"
+echo
+
+echo "=== Test Suite ==="
+COUNT=$(ls tests/*.mjs | wc -l)
+echo "$COUNT test files"
+echo
+
+echo "=== Recent Commits ==="
+git log --oneline -10 --no-decorate
+echo}

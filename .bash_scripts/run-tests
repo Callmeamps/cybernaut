@@ -1,0 +1,18 @@
+#!/bin/bash
+# Run test suite
+# Usage: ./run-tests [pattern|all]
+# Example: ./run-tests             # runs quick unit tests
+#          ./run-tests all        # runs all tests (may require browser harness)
+#          ./run-tests login_hooks # runs by regex
+set -euo pipefail
+
+TEST_PATTERN="${1:-.}"
+if [[ "$TEST_PATTERN" == "all" ]]; then
+  echo "Running full test suite..."
+  node --test tests/*.mjs
+else
+  echo "Running unit tests matching "$TEST_PATTERN"..."
+  node --test tests/*$TEST_PATTERN*.mjs
+fi
+
+echo "--- Tests complete ---"

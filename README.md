@@ -46,6 +46,14 @@ HOST=127.0.0.1
 SINGLE_USER_APP=true
 ```
 
+## Scripts
+
+Reusable scripts for common tasks:
+
+- **start-server**: `./.bash_scripts/start-server [port]` — starts local dev server
+- **run-tests**: `./.bash_scripts/run-tests [all|pattern]` — runs test suite
+- **audit**: `./.bash_scripts/audit` — repo health summary
+
 Agent settings (API key, model, endpoint) are configured in the browser UI under Settings.
 
 ## Agent API
