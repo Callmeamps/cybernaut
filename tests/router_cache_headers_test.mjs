@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import path from "node:path";
+import { EventEmitter } from "node:events";
 import test from "node:test";
 
 import { FILE_INDEX_AREA } from "../server/runtime/state_areas.js";
@@ -16,23 +17,41 @@ function createMockResponse() {
     resolveResult = resolve;
   });
 
-  const response = {
-    finished: false,
-    headers: null,
-    statusCode: null,
-    writableEnded: false,
-    writeHead(statusCode, headers = {}) {
-      this.statusCode = statusCode;
-      this.headers = { ...headers };
-    },
-    end(body = "") {
-      this.writableEnded = true;
-      resolveResult({
-        body: Buffer.isBuffer(body) ? body.toString("utf8") : String(body || ""),
-        headers: this.headers || {},
-        statusCode: this.statusCode
-      });
-    }
+  const emitter = new EventEmitter();
+  let body = "";
+  let statusCode = null;
+  let headers = null;
+
+  const response = Object.create(emitter, {
+    finished: { value: false, writable: true },
+    headers: { get: () => headers, set: (v) => { headers = v; } },
+    statusCode: { get: () => statusCode, set: (v) => { statusCode = v; } },
+    writableEnded: { value: false, writable: true },
+  });
+
+  response.writeHead = function(code, hdrs = {}) {
+    statusCode = code;
+    headers = { ...hdrs };
+  };
+
+  response.write = function(chunk) {
+    body += Buffer.isBuffer(chunk) ? chunk.toString("utf8") : String(chunk);
+    return true;
+  };
+
+  response.end = function(chunk) {
+    if (chunk) body += Buffer.isBuffer(chunk) ? chunk.toString("utf8") : String(chunk);
+    this.writableEnded = true;
+    this.finished = true;
+    resolveResult({ body, headers: headers || {}, statusCode });
+  };
+
+  response.destroy = function() {};
+
+  response.pipe = function(dest) {
+    // When readable.pipe(res) is called, Node's pipe implementation
+    // calls res.write(). We return dest for chaining.
+    return dest;
   };
 
   return { response, result };

@@ -1021,6 +1021,8 @@ function listAppPathsByPatterns(options = {}) {
 export {
   copyAppPath,
   copyAppPaths,
+  createAppAccessController,
+  createHttpError,
   deleteAppPath,
   deleteAppPaths,
   getAppFolderDownloadInfo,
@@ -1031,6 +1033,7 @@ export {
   moveAppPaths,
   readAppFile,
   readAppFiles,
+  toAppRelativePath,
   writeAppFile,
   writeAppFiles
 };

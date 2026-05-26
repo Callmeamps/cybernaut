@@ -26,6 +26,7 @@ import {
   readAbsolutePathSize
 } from "../user_quota.js";
 import { createEmptyGroupIndex } from "../overrides.js";
+import { createReadableOwnerScopesFromGroupIndex } from "./permission_check.js";
 import { globToRegExp, normalizePathSegment } from "../../utils/app_files.js";
 import { isProjectPathWithinMaxLayer, normalizeMaxLayer } from "../layer_limit.js";
 import { FILE_INDEX_AREA } from "../../../runtime/state_areas.js";

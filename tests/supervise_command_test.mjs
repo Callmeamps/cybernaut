@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import { __test as superviseTest } from "../commands/supervise.js";
 import { buildServeProcessTitle, buildSupervisorProcessTitle } from "../server/lib/utils/process_title.js";
+
+const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 test("supervise keeps serve args opaque and reserves only supervisor-owned flags", () => {
   const { options, serveArgs } = superviseTest.parseSuperviseArgs([
@@ -64,8 +67,8 @@ test("supervise resolves public bind and required customware from args then env"
   };
 
   assert.equal(
-    superviseTest.resolveRequiredCustomwarePath("/workspace/agent-one", serveArgs, env),
-    path.resolve("/workspace/agent-one", "relative-state")
+    superviseTest.resolveRequiredCustomwarePath(PROJECT_ROOT, serveArgs, env),
+    path.resolve(PROJECT_ROOT, "relative-state")
   );
   assert.equal(superviseTest.resolvePublicHost({}, serveArgs, env), "1.2.3.4");
   assert.equal(superviseTest.resolvePublicPort({}, serveArgs, env), 4567);
@@ -73,8 +76,8 @@ test("supervise resolves public bind and required customware from args then env"
 
 test("supervise defaults state dir to project-root supervisor folder", () => {
   assert.equal(
-    superviseTest.resolveDefaultStateDir("/workspace/agent-one"),
-    path.join("/workspace/agent-one", "supervisor")
+    superviseTest.resolveDefaultStateDir(PROJECT_ROOT),
+    path.join(PROJECT_ROOT, "supervisor")
   );
 });
 
