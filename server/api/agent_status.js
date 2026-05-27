@@ -39,7 +39,7 @@ export async function get(context) {
       version: "0.1.0",
       runtime: "browser-first",
       hasApiKey: Boolean(userConfig.apiKey?.trim()),
-      model: userConfig.model || "anthropic/claude-sonnet-4.6",
+      model: userConfig.model || "openai/gpt-4o",
       apiEndpoint: userConfig.apiEndpoint || "https://openrouter.ai/api/v1/chat/completions",
       provider: userConfig.provider || "api"
     },

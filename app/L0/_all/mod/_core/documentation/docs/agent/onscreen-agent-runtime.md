@@ -68,7 +68,7 @@ Current defaults:
 - local provider: `huggingface`
 - Hugging Face dtype: `q4`
 - endpoint: `https://openrouter.ai/api/v1/chat/completions`
-- model: `anthropic/claude-sonnet-4.6`
+- model: `openai/gpt-4o`
 - params: `temperature: 0.2`
 - max tokens: `120000`
 - display mode: `compact`

@@ -58,7 +58,7 @@ Agent settings (API key, model, endpoint) are configured in the browser UI under
 
 ## Agent API
 
-Connect external coding agents (Claude, GPT, Cursor, etc.) via the REST API:
+Connect external coding agents (any OpenAI-compatible LLM) via the REST API:
 
 ```bash
 # Check agent status

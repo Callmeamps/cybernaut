@@ -11,7 +11,7 @@ const DEFAULT_SYSTEM_PROMPT_PATH = path.join(
 
 const DEFAULT_AGENT_CONFIG = {
   apiEndpoint: "https://openrouter.ai/api/v1/chat/completions",
-  model: "anthropic/claude-sonnet-4.6",
+  model: "openai/gpt-4o",
   apiKey: "",
   temperature: 0.2
 };

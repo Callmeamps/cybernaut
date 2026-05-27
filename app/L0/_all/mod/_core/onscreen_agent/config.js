@@ -25,7 +25,7 @@ export const DEFAULT_ONSCREEN_AGENT_SETTINGS = {
   huggingfaceModel: "",
   localProvider: ONSCREEN_AGENT_LOCAL_PROVIDER.HUGGINGFACE,
   maxTokens: DEFAULT_ONSCREEN_AGENT_MAX_TOKENS,
-  model: "anthropic/claude-sonnet-4-20250514",
+  model: "openai/gpt-4o",
   paramsText: "temperature:0.2",
   promptBudgetRatios: { ...DEFAULT_PROMPT_BUDGET_RATIOS },
   provider: ONSCREEN_AGENT_LLM_PROVIDER.API
