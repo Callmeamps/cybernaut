@@ -19,6 +19,61 @@ import {
   prependAssistantEvaluationLogs
 } from "/mod/_core/agent-chat/assistant-message-evaluation.js";
 import { DEFAULT_MODEL_INPUT, DTYPE_OPTIONS, normalizeHuggingFaceModelInput } from "/mod/_core/huggingface/helpers.js";
+import {
+  MODELS, MODEL_GROUPS, MODELS_BY_ID, isCustomModel as isCustomModelRecord,
+  getModelDefaultEndpoint, DEFAULT_ONSCREEN_AGENT_SETTINGS as configDefaultSettings,
+  THEMES, DEFAULT_THEME, THEME_STORAGE_KEY,
+  CHARACTERS, DEFAULT_CHARACTER_ID, CHARACTER_STORAGE_KEY
+} from "/mod/_core/onscreen_agent/config.js";
+
+function applyTheme(themeId) {
+  const root = document.documentElement;
+  root.classList.remove("theme-light");
+  if (themeId === "light") {
+    root.classList.add("theme-light");
+  } else if (themeId === "system") {
+    const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+    if (prefersLight) {
+      root.classList.add("theme-light");
+    }
+  }
+  // Persist to localStorage for fast reload
+  try { localStorage.setItem(THEME_STORAGE_KEY, themeId); } catch {}
+}
+
+function getSystemTheme() {
+  if (window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+  return "dark";
+}
+
+function resolveEffectiveTheme(themeId) {
+  if (themeId === "system") return getSystemTheme();
+  return themeId || DEFAULT_THEME;
+}
+
+function findCharacter(characterId) {
+  return CHARACTERS.find((c) => c.id === characterId) || CHARACTERS[0];
+}
+
+function findTheme(themeId) {
+  return THEMES.find((t) => t.id === themeId) || THEMES[0];
+}
+
+function loadPersistedTheme() {
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored && THEMES.some((t) => t.id === stored)) return stored;
+  } catch {}
+  return null;
+}
+
+function loadPersistedCharacter() {
+  try {
+    const stored = localStorage.getItem(CHARACTER_STORAGE_KEY);
+    if (stored && CHARACTERS.some((c) => c.id === stored)) return stored;
+  } catch {}
+  return null;
+}
 import { getHuggingFaceManager } from "/mod/_core/huggingface/manager.js";
 import { positionPopover } from "/mod/_core/visual/chrome/popover.js";
 import { showToast } from "/mod/_core/visual/chrome/toast.js";
@@ -1411,6 +1466,7 @@ const model = {
   settings: {
     apiEndpoint: "",
     apiKey: "",
+    characterId: DEFAULT_CHARACTER_ID,
     huggingfaceDtype: config.DEFAULT_ONSCREEN_AGENT_SETTINGS.huggingfaceDtype,
     huggingfaceModel: "",
     localProvider: config.DEFAULT_ONSCREEN_AGENT_SETTINGS.localProvider,
@@ -1418,11 +1474,13 @@ const model = {
     model: "",
     paramsText: "",
     promptBudgetRatios: { ...config.DEFAULT_ONSCREEN_AGENT_SETTINGS.promptBudgetRatios },
-    provider: config.DEFAULT_ONSCREEN_AGENT_SETTINGS.provider
+    provider: config.DEFAULT_ONSCREEN_AGENT_SETTINGS.provider,
+    theme: DEFAULT_THEME
   },
   settingsDraft: {
     apiEndpoint: "",
     apiKey: "",
+    characterId: DEFAULT_CHARACTER_ID,
     huggingfaceDtype: config.DEFAULT_ONSCREEN_AGENT_SETTINGS.huggingfaceDtype,
     huggingfaceModel: "",
     localProvider: config.DEFAULT_ONSCREEN_AGENT_SETTINGS.localProvider,
@@ -1430,7 +1488,8 @@ const model = {
     model: "",
     paramsText: "",
     promptBudgetRatios: { ...config.DEFAULT_ONSCREEN_AGENT_SETTINGS.promptBudgetRatios },
-    provider: config.DEFAULT_ONSCREEN_AGENT_SETTINGS.provider
+    provider: config.DEFAULT_ONSCREEN_AGENT_SETTINGS.provider,
+    theme: DEFAULT_THEME
   },
   status: "Loading onscreen agent...",
   stopRequested: false,
@@ -1614,6 +1673,91 @@ const model = {
 
   get llmSummary() {
     return summarizeOnscreenAgentLlmSelection(this.settings, this.huggingface);
+  },
+
+  // ─── Models ───────────────────────────────────────────────────────────────
+
+  get models() {
+    return MODELS;
+  },
+
+  get modelGroups() {
+    return MODEL_GROUPS;
+  },
+
+  modelsByGroup(group) {
+    return MODELS.filter((m) => m.group === group);
+  },
+
+  get isCustomModelSelected() {
+    return isCustomModelRecord(this.settingsDraft.model);
+  },
+
+  get settingsDraftModelInfo() {
+    return MODELS_BY_ID[this.settingsDraft.model] || null;
+  },
+
+  onModelSelectChange(event) {
+    const modelId = event?.target?.value || this.settingsDraft.model;
+    this.settingsDraft = { ...this.settingsDraft, model: modelId };
+    // Auto-set endpoint if the selected model has one
+    const record = MODELS_BY_ID[modelId];
+    if (record?.endpoint) {
+      this.settingsDraft = { ...this.settingsDraft, apiEndpoint: record.endpoint };
+    }
+  },
+
+  onCustomModelInput(event) {
+    const value = event?.target?.value || "";
+    this.settingsDraft = { ...this.settingsDraft, model: value };
+  },
+
+  // ─── Themes ───────────────────────────────────────────────────────────────
+
+  get themes() {
+    return THEMES;
+  },
+
+  get effectiveTheme() {
+    return resolveEffectiveTheme(this.settings.theme);
+  },
+
+  setTheme(themeId) {
+    this.settingsDraft = { ...this.settingsDraft, theme: themeId };
+    applyTheme(themeId);
+  },
+
+  // ─── Characters ───────────────────────────────────────────────────────────
+
+  get characters() {
+    return CHARACTERS;
+  },
+
+  get currentCharacter() {
+    return findCharacter(this.settings.characterId);
+  },
+
+  get draftCharacter() {
+    return findCharacter(this.settingsDraft.characterId);
+  },
+
+  setCharacter(characterId) {
+    this.settingsDraft = { ...this.settingsDraft, characterId };
+    const character = findCharacter(characterId);
+    if (character) {
+      // Update the avatar image
+      this.applyCharacterAvatar(character);
+    }
+  },
+
+  applyCharacterAvatar(character) {
+    const avatarImg = this.refs?.avatarVisual?.querySelector?.(".onscreen-agent-avatar-image");
+    if (avatarImg && character.avatar) {
+      avatarImg.src = character.avatar;
+    }
+    // Store for persistence
+    this._characterAvatar = character.avatar;
+    this._characterEmoji = character.emoji;
   },
 
   get isSettingsDraftUsingApiProvider() {
@@ -2600,7 +2744,9 @@ const model = {
     try {
       await storage.saveOnscreenAgentConfig({
         settings: this.settings,
-        systemPrompt: this.systemPrompt
+        systemPrompt: this.systemPrompt,
+        characterId: this.settings.characterId || DEFAULT_CHARACTER_ID,
+        theme: this.settings.theme || DEFAULT_THEME
       });
     } catch (error) {
       this.reportError("persisting overlay config", error, {
@@ -3329,6 +3475,23 @@ const model = {
         this.displayMode = normalizeDisplayMode(storedConfig.displayMode);
         this.historyHeight = config.normalizeOnscreenAgentHistoryHeight(storedConfig.historyHeight);
         this.uiStateOwner = String(storedConfig.uiStateOwner || "").trim();
+
+        // Ensure theme and character have defaults
+        if (!this.settings.theme) {
+          this.settings.theme = loadPersistedTheme() || DEFAULT_THEME;
+        }
+        if (!this.settings.characterId) {
+          this.settings.characterId = loadPersistedCharacter() || DEFAULT_CHARACTER_ID;
+        }
+        // Apply saved theme
+        applyTheme(this.settings.theme);
+        // Apply saved character
+        const savedCharacter = findCharacter(this.settings.characterId);
+        if (savedCharacter) {
+          this.applyCharacterAvatar(savedCharacter);
+        }
+        // Persist character to localStorage
+        try { localStorage.setItem(CHARACTER_STORAGE_KEY, this.settings.characterId); } catch {}
 
         if (this.shouldCenterInitialPosition) {
           const initialPosition = this.getInitialBottomAlignedCenteredPositionEstimate();
@@ -4398,6 +4561,8 @@ const model = {
       ...this.settings,
       promptBudgetRatios: clonePromptBudgetRatios(this.settings.promptBudgetRatios)
     };
+    // Apply the current theme for live preview
+    applyTheme(this.settings.theme);
     this.syncHuggingFaceFromManager();
     this.prefillSettingsDraftDefaultHuggingFaceModel();
 
@@ -4569,10 +4734,13 @@ const model = {
 
     this.settingsDraft = {
       ...config.DEFAULT_ONSCREEN_AGENT_SETTINGS,
+      characterId: DEFAULT_CHARACTER_ID,
       promptBudgetRatios: { ...config.DEFAULT_ONSCREEN_AGENT_SETTINGS.promptBudgetRatios },
+      theme: DEFAULT_THEME,
       apiKey: preservedApiKey
     };
     this.status = "LLM settings draft reset to defaults except API key.";
+    applyTheme(DEFAULT_THEME);
   },
 
   async saveSettingsFromDialog() {
@@ -4601,9 +4769,12 @@ const model = {
       return;
     }
 
+    const draftCharacterId = this.settingsDraft.characterId || DEFAULT_CHARACTER_ID;
+    const draftTheme = this.settingsDraft.theme || DEFAULT_THEME;
     this.settings = {
       apiEndpoint: (this.settingsDraft.apiEndpoint || "").trim(),
       apiKey: (this.settingsDraft.apiKey || "").trim(),
+      characterId: draftCharacterId,
       huggingfaceDtype: (this.settingsDraft.huggingfaceDtype || "").trim(),
       huggingfaceModel: normalizeHuggingFaceModelInput(this.settingsDraft.huggingfaceModel || ""),
       localProvider,
@@ -4613,8 +4784,26 @@ const model = {
       promptBudgetRatios: clonePromptBudgetRatios(this.settingsDraft.promptBudgetRatios),
       provider,
       storedApiKeyLocked: this.settings.storedApiKeyLocked === true,
-      storedApiKeyValue: String(this.settings.storedApiKeyValue || "")
+      storedApiKeyValue: String(this.settings.storedApiKeyValue || ""),
+      theme: draftTheme
     };
+    // Apply theme and character
+    applyTheme(draftTheme);
+    const character = findCharacter(draftCharacterId);
+    if (character) {
+      this.applyCharacterAvatar(character);
+      // Inject character system prompt prefix
+      if (character.systemPromptPrefix) {
+        this.systemPrompt = character.systemPromptPrefix + "\n\n" + draftPrompt;
+      } else {
+        this.systemPrompt = draftPrompt;
+      }
+    }
+    // Persist to localStorage
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, draftTheme);
+      localStorage.setItem(CHARACTER_STORAGE_KEY, draftCharacterId);
+    } catch {}
     this.systemPrompt = draftPrompt;
     this.systemPromptDraft = draftPrompt;
     const hadPromptInput = Boolean(this.promptInput);

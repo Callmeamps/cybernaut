@@ -46,3 +46,9 @@
 ### Test Results
 - 125 pass, 3 fail (browser module path tests need server-side resolution)
 - Browser integration tests need headless browser harness (Playwright/Puppeteer)
+
+## Active Beads
+
+- [~] Add model list to agent settings (bead cybernaut-h2t) — P1
+- [~] Add theme switching dark/light/system (bead cybernaut-lxy) — P1
+- [~] Add character/persona switching (bead cybernaut-ldl) — P1

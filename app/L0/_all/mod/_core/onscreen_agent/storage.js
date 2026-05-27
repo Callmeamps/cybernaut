@@ -72,11 +72,16 @@ function normalizeStoredPromptBudgetRatios(storedConfig = {}) {
   });
 }
 
+const DEFAULT_THEME = "dark";
+const DEFAULT_CHARACTER_ID = "default";
+
 function createDefaultConfig() {
   return {
     settings: {
       ...config.DEFAULT_ONSCREEN_AGENT_SETTINGS,
-      promptBudgetRatios: { ...config.DEFAULT_ONSCREEN_AGENT_SETTINGS.promptBudgetRatios }
+      characterId: DEFAULT_CHARACTER_ID,
+      promptBudgetRatios: { ...config.DEFAULT_ONSCREEN_AGENT_SETTINGS.promptBudgetRatios },
+      theme: DEFAULT_THEME
     },
     systemPrompt: "",
     agentX: null,
@@ -213,6 +218,7 @@ async function normalizeStoredConfig(runtime, parsedConfig) {
     settings: {
       apiEndpoint: String(storedConfig.api_endpoint || storedConfig.apiEndpoint || config.DEFAULT_ONSCREEN_AGENT_SETTINGS.apiEndpoint || "").trim(),
       apiKey: storedApiKey.value,
+      characterId: String(storedConfig.character_id || storedConfig.characterId || DEFAULT_CHARACTER_ID).trim() || DEFAULT_CHARACTER_ID,
       huggingfaceDtype: String(
         storedConfig.huggingface_dtype ||
           storedConfig.huggingfaceDtype ||
@@ -232,7 +238,8 @@ async function normalizeStoredConfig(runtime, parsedConfig) {
       promptBudgetRatios: normalizeStoredPromptBudgetRatios(storedConfig),
       provider,
       storedApiKeyLocked: storedApiKey.locked,
-      storedApiKeyValue: storedApiKey.storedValue
+      storedApiKeyValue: storedApiKey.storedValue,
+      theme: String(storedConfig.theme || storedConfig.color_scheme || DEFAULT_THEME).trim() || DEFAULT_THEME
     },
     systemPrompt: String(
       storedConfig.custom_system_prompt ||
@@ -285,6 +292,8 @@ async function buildStoredConfigPayload(runtime, { settings, systemPrompt }) {
     max_tokens: config.normalizeOnscreenAgentMaxTokens(settings?.maxTokens),
     model: String(settings?.model || config.DEFAULT_ONSCREEN_AGENT_SETTINGS.model || "").trim(),
     params: String(settings?.paramsText || config.DEFAULT_ONSCREEN_AGENT_SETTINGS.paramsText || "").trim(),
+    theme: String(settings?.theme || DEFAULT_THEME).trim() || DEFAULT_THEME,
+    character_id: String(settings?.characterId || DEFAULT_CHARACTER_ID).trim() || DEFAULT_CHARACTER_ID,
     prompt_budget_ratios: {
       history: config.normalizeOnscreenAgentPromptBudgetRatios(settings?.promptBudgetRatios).history,
       single_message: config.normalizeOnscreenAgentPromptBudgetRatios(settings?.promptBudgetRatios).singleMessage,

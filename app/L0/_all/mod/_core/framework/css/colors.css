@@ -2,7 +2,7 @@
   /*
    * Shared dark-space palette.
    * New frontend work should use these semantic tokens directly.
-   * The shared framework palette is dark-only.
+   * Use .theme-light on <html> for the light variant.
    */
   color-scheme: dark;
   --color-canvas: #050816;
@@ -45,4 +45,58 @@
   --color-warning: var(--color-status-warning);
   --color-danger: var(--color-status-danger);
   --color-overlay: var(--color-layer-overlay);
+}
+
+.theme-light {
+  color-scheme: light;
+  --color-canvas: #f0f4f8;
+  --color-canvas-elevated: #ffffff;
+  --color-canvas-deep: #e8ecf1;
+  --color-surface-1: #ffffff;
+  --color-surface-2: #f5f7fa;
+  --color-surface-3: #ebeef2;
+  --color-surface-glass: rgba(255, 255, 255, 0.82);
+  --color-border-soft: rgba(30, 50, 80, 0.12);
+  --color-border-strong: rgba(30, 50, 80, 0.22);
+  --color-text-primary: #1a2332;
+  --color-text-secondary: #4a5a6e;
+  --color-text-tertiary: #7a8a9e;
+  --color-accent-primary: #0077b6;
+  --color-accent-primary-strong: #005f8a;
+  --color-accent-primary-soft: rgba(0, 119, 182, 0.10);
+  --color-accent-secondary: #00897b;
+  --color-accent-ink: #ffffff;
+  --color-status-success: #2e7d32;
+  --color-status-warning: #e65100;
+  --color-status-danger: #c62828;
+  --color-layer-overlay: rgba(0, 0, 0, 0.32);
+  --color-backdrop-glow-primary: rgba(0, 95, 138, 0.10);
+  --color-backdrop-glow-secondary: rgba(0, 137, 123, 0.08);
+  --color-backdrop-glow-depth: rgba(0, 60, 100, 0.12);
+  --color-backdrop-star-strong: rgba(30, 50, 80, 0.55);
+  --color-backdrop-star-soft: rgba(30, 50, 80, 0.18);
+  --color-backdrop-star-accent: rgba(0, 95, 138, 0.30);
+  --color-backdrop-star-halo: rgba(30, 50, 80, 0.08);
+  --color-backdrop-star-halo-accent: rgba(0, 95, 138, 0.10);
+  --color-background: var(--color-canvas);
+  --color-surface: var(--color-surface-1);
+  --color-surface-subtle: var(--color-surface-2);
+  --color-border: var(--color-border-soft);
+  --color-text: var(--color-text-primary);
+  --color-text-muted: var(--color-text-secondary);
+  --color-primary: var(--color-accent-primary-strong);
+  --color-success: var(--color-status-success);
+  --color-warning: var(--color-status-warning);
+  --color-danger: var(--color-status-danger);
+  --color-overlay: var(--color-layer-overlay);
+}
+
+.theme-light .onscreen-agent-avatar-button {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.theme-light .onscreen-agent-panel-bg {
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }

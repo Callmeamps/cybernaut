@@ -329,6 +329,43 @@
                     </div>
                   </header>
                   <div class="dialog-scroll-body">
+                    <!-- Theme selector -->
+                    <label class="field">
+                      <span>Theme</span>
+                      <div class="theme-select-wrap">
+                        <template x-for="theme in $store.onscreenAgent.themes" :key="theme.id">
+                          <button
+                            type="button"
+                            class="theme-option"
+                            :class="{ 'is-active': $store.onscreenAgent.settingsDraft.theme === theme.id }"
+                            x-on:click="$store.onscreenAgent.setTheme(theme.id)"
+                            :title="theme.description"
+                          >
+                            <span class="theme-option-icon" x-text="theme.icon"></span>
+                            <span class="theme-option-label" x-text="theme.label"></span>
+                          </button>
+                        </template>
+                      </div>
+                    </label>
+                    <!-- Character selector -->
+                    <label class="field">
+                      <span>Character</span>
+                      <div class="character-select-wrap">
+                        <template x-for="character in $store.onscreenAgent.characters" :key="character.id">
+                          <button
+                            type="button"
+                            class="character-option"
+                            :class="{ 'is-active': $store.onscreenAgent.settingsDraft.characterId === character.id }"
+                            x-on:click="$store.onscreenAgent.setCharacter(character.id)"
+                            :title="character.description"
+                          >
+                            <img class="character-option-avatar" :src="character.avatar" :alt="character.name" x-show="character.avatar" />
+                            <span class="character-option-emoji" x-text="character.emoji" x-show="!character.avatar"></span>
+                            <span class="character-option-label" x-text="character.name"></span>
+                          </button>
+                        </template>
+                      </div>
+                    </label>
                     <div class="dialog-segmented-control onscreen-agent-provider-switch" role="tablist" aria-label="LLM provider">
                       <button
                         type="button"
@@ -353,8 +390,32 @@
                         <input type="url" x-model="$store.onscreenAgent.settingsDraft.apiEndpoint" />
                       </label>
                       <label class="field">
-                        <span>Model Name</span>
-                        <input type="text" x-model="$store.onscreenAgent.settingsDraft.model" />
+                        <span>Model</span>
+                        <div class="model-select-wrap">
+                          <select
+                            class="model-select"
+                            x-model="$store.onscreenAgent.settingsDraft.model"
+                            x-on:change="$store.onscreenAgent.onModelSelectChange($event)"
+                          >
+                            <template x-for="group in $store.onscreenAgent.modelGroups" :key="group">
+                              <optgroup :label="group">
+                                <template x-for="model in $store.onscreenAgent.modelsByGroup(group)" :key="model.id">
+                                  <option :value="model.id" x-text="model.label" :selected="$store.onscreenAgent.settingsDraft.model === model.id"></option>
+                                </template>
+                              </optgroup>
+                            </template>
+                          </select>
+                          <template x-if="$store.onscreenAgent.isCustomModelSelected">
+                            <input
+                              type="text"
+                              class="model-custom-input"
+                              placeholder="Enter custom model ID, e.g. org/model-name"
+                              x-model="$store.onscreenAgent.settingsDraft.model"
+                              x-on:input="$store.onscreenAgent.onCustomModelInput($event)"
+                            />
+                          </template>
+                        </div>
+                        <p class="field-note" x-show="$store.onscreenAgent.settingsDraftModelInfo" x-text="$store.onscreenAgent.settingsDraftModelInfo.description"></p>
                       </label>
                       <label class="field">
                         <span>API Key</span>
