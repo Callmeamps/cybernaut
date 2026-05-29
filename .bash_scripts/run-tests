@@ -9,10 +9,10 @@ set -euo pipefail
 TEST_PATTERN="${1:-.}"
 if [[ "$TEST_PATTERN" == "all" ]]; then
   echo "Running full test suite..."
-  node --test tests/*.mjs
+  node --loader ./tests/import_map_loader.mjs --test tests/*_test.mjs
 else
   echo "Running unit tests matching "$TEST_PATTERN"..."
-  node --test tests/*$TEST_PATTERN*.mjs
+  node --loader ./tests/import_map_loader.mjs --test tests/*$TEST_PATTERN*_test.mjs
 fi
 
 echo "--- Tests complete ---"

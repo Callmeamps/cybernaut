@@ -10,8 +10,11 @@ import {
   stopBrowserHarness,
   stopHttpServer
 } from "./browser_harness_cli_test_utils.mjs";
+import { isElectronAvailable } from "./skip_if_no_electron.mjs";
 
-test("browser CLI content uses typed ref boxes, state tags, semantic tags, and URL fallbacks", {
+const describeIfElectron = isElectronAvailable() ? test : test.skip;
+
+describeIfElectron("browser CLI content uses typed ref boxes, state tags, semantic tags, and URL fallbacks", {
   timeout: 2 * 60 * 1000
 }, async () => {
   const server = await startHttpServer((request, response) => {
@@ -96,7 +99,7 @@ test("browser CLI content uses typed ref boxes, state tags, semantic tags, and U
   }
 });
 
-test("browser CLI content descends into actionable dialog containers", {
+describeIfElectron("browser CLI content descends into actionable dialog containers", {
   timeout: 2 * 60 * 1000
 }, async () => {
   const server = await startHttpServer((request, response) => {
@@ -160,7 +163,7 @@ test("browser CLI content descends into actionable dialog containers", {
   }
 });
 
-test("browser CLI actions report visible reaction and no-op retries", {
+describeIfElectron("browser CLI actions report visible reaction and no-op retries", {
   timeout: 2 * 60 * 1000
 }, async () => {
   const server = await startHttpServer((request, response) => {
@@ -225,7 +228,7 @@ test("browser CLI actions report visible reaction and no-op retries", {
   }
 });
 
-test("browser CLI content falls back to live DOM capture on Trusted Types pages", {
+describeIfElectron("browser CLI content falls back to live DOM capture on Trusted Types pages", {
   timeout: 2 * 60 * 1000
 }, async () => {
   const server = await startHttpServer((request, response) => {
@@ -266,7 +269,7 @@ test("browser CLI content falls back to live DOM capture on Trusted Types pages"
   }
 });
 
-test("browser CLI content stays available after late same-document navigation", {
+describeIfElectron("browser CLI content stays available after late same-document navigation", {
   timeout: 2 * 60 * 1000
 }, async () => {
   const server = await startHttpServer((request, response) => {

@@ -8,8 +8,11 @@ import {
   stopBrowserHarness,
   stopHttpServer
 } from "./browser_harness_cli_test_utils.mjs";
+import { isElectronAvailable } from "./skip_if_no_electron.mjs";
 
-test("browser CLI treats localhost hosts like address-bar input instead of app-relative paths", {
+const describeIfElectron = isElectronAvailable() ? test : test.skip;
+
+describeIfElectron("browser CLI treats localhost hosts like address-bar input instead of app-relative paths", {
   timeout: 2 * 60 * 1000
 }, async () => {
   const server = await startHttpServer((request, response) => {

@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { runDesktopBrowserHarnessTest } from "./desktop_browser_harness.mjs";
+import { isElectronAvailable } from "./skip_if_no_electron.mjs";
 
-test("desktop browser harness navigates Novinky and clears the consent page", {
+const describeIfElectron = isElectronAvailable() ? test : test.skip;
+
+describeIfElectron("desktop browser harness navigates Novinky and clears the consent page", {
   timeout: 7 * 60 * 1000
 }, async () => {
   const result = await runDesktopBrowserHarnessTest({

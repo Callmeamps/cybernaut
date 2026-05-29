@@ -10,7 +10,8 @@
   },
   "scripts": {
     "start": "node space serve",
-    "dev": "node server/dev_server.js"
+    "dev": "node server/dev_server.js",
+    "test": "node --loader ./tests/import_map_loader.mjs --test tests/*_test.mjs"
   },
   "engines": {
     "node": "22"
