@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: cybernaut-test
+    env: node
+    buildCommand: "npm install"
+    startCommand: "node space serve"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+      - key: SINGLE_USER_APP
+        value: "true"
+    repo: https://github.com/callmeamps/cybernaut.git
+    branch: main
+    region: oregon

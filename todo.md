@@ -13,7 +13,7 @@
 
 ## Active
 - [ ] Resolve browser review findings (5 issues from 2026-05-27 audit)
-- [ ] CI setup for full test suite (needs Chromium for browser integration tests)
+- [x] Add CI setup for full test suite (Playwright installed, GitHub Actions configured)
 
 ## Browser Review Findings (2026-05-27)
 1. Headless browser can't click sidebar items (CSS visibility issue)
