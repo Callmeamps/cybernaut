@@ -90,13 +90,13 @@ bd close <id>         # Complete work
 npm install
 
 # Run all tests
-node --test tests/*.mjs
+npm test
 
 # Run a specific test file
-node --test tests/yaml_lite_test.mjs
+node --loader ./tests/import_map_loader.mjs --test tests/yaml_lite_test.mjs
 
 # Run tests matching a pattern
-node --test tests/*login*.mjs
+node --loader ./tests/import_map_loader.mjs --test tests/*login*.mjs
 
 # Start the server
 node space serve
