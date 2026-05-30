@@ -17,6 +17,7 @@
     "node": "22"
   },
   "dependencies": {
+    "@playwright/test": "^1.60.0",
     "archiver": "^7.0.1",
     "electron-updater": "^6.8.3",
     "isomorphic-git": "^1.37.4",
