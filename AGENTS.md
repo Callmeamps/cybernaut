@@ -228,7 +228,7 @@ render services create \
   --build-command "npm install" \
   --start-command "node space serve" \
   --region oregon \
-  --plan starter \
+  --plan free \
   --env-var "NODE_ENV=production" \
   --env-var "PORT=10000" \
   --env-var "HOST=0.0.0.0" \
@@ -237,7 +237,7 @@ render services create \
 ```
 
 **Internal Test Deployments**
-- `[INTERNAL] Test URL: https://cybernaut-<ENV>.onrender.com` — check Render dashboard for current instance
+- `[INTERNAL] Test URL: https://cybernaut.onrender.com` — current Render instance
 - Render dashboard: https://dashboard.render.com
 
 **Railway (Alternative)**
