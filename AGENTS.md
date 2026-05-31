@@ -215,6 +215,37 @@ node space version       # Show version
 - Branch: `main`
 - Remote: `https://github.com/Callmeamps/cybernaut.git`
 
+### Deployment
+
+**Render (Production)**
+```bash
+render services create \
+  --name cybernaut \
+  --type web_service \
+  --repo https://github.com/Callmeamps/cybernaut.git \
+  --branch main \
+  --runtime node \
+  --build-command "npm install" \
+  --start-command "node space serve" \
+  --region oregon \
+  --plan starter \
+  --env-var "NODE_ENV=production" \
+  --env-var "PORT=10000" \
+  --env-var "HOST=0.0.0.0" \
+  --env-var "SINGLE_USER_APP=true" \
+  --health-check-path "/api/health"
+```
+
+**Internal Test Deployments**
+- `[INTERNAL] Test URL: https://cybernaut-<ENV>.onrender.com` — check Render dashboard for current instance
+- Render dashboard: https://dashboard.render.com
+
+**Railway (Alternative)**
+```bash
+railway init
+railway up
+```
+
 ### Security
 - Never commit `.env` (contains secrets).
 - Never commit `app/L2/` (user data).
