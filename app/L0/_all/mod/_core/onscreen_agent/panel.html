@@ -343,8 +343,25 @@
                           >
                             <span class="theme-option-icon" x-text="theme.icon"></span>
                             <span class="theme-option-label" x-text="theme.label"></span>
+                            <span
+                              class="creator-edit-button"
+                              x-show="$store.onscreenAgent.isCustomTheme(theme.id)"
+                              x-on:click.stop="$store.onscreenAgent.openCreatorDialog('theme', theme.id)"
+                              title="Edit this theme"
+                            >
+                              <x-icon>more_vert</x-icon>
+                            </span>
                           </button>
                         </template>
+                        <button
+                          type="button"
+                          class="creator-open-button"
+                          x-on:click="$store.onscreenAgent.openCreatorDialog('theme')"
+                          title="Create a custom theme"
+                        >
+                          <x-icon>add</x-icon>
+                          <span>Create</span>
+                        </button>
                       </div>
                     </label>
                     <!-- Character selector -->
@@ -362,8 +379,25 @@
                             <img class="character-option-avatar" :src="character.avatar" :alt="character.name" x-show="character.avatar" />
                             <span class="character-option-emoji" x-text="character.emoji" x-show="!character.avatar"></span>
                             <span class="character-option-label" x-text="character.name"></span>
+                            <span
+                              class="creator-edit-button"
+                              x-show="$store.onscreenAgent.isCustomCharacter(character.id)"
+                              x-on:click.stop="$store.onscreenAgent.openCreatorDialog('character', character.id)"
+                              title="Edit this character"
+                            >
+                              <x-icon>more_vert</x-icon>
+                            </span>
                           </button>
                         </template>
+                        <button
+                          type="button"
+                          class="creator-open-button"
+                          x-on:click="$store.onscreenAgent.openCreatorDialog('character')"
+                          title="Create a custom character"
+                        >
+                          <x-icon>add</x-icon>
+                          <span>Create</span>
+                        </button>
                       </div>
                     </label>
                     <div class="dialog-segmented-control onscreen-agent-provider-switch" role="tablist" aria-label="LLM provider">
@@ -694,6 +728,172 @@
           </template>
         </section>
       </template>
+
+      <!-- ─── Creator Dialog ─────────────────────────────────────────── -->
+      <dialog
+        class="creator-dialog"
+        x-ref="creatorDialog"
+        x-show="$store.onscreenAgent.isCreatorDialogOpen"
+        @cancel.prevent="$store.onscreenAgent.closeCreatorDialog()"
+        x-cloak
+      >
+        <form method="dialog" class="dialog-card dialog-card-shell" @submit.prevent>
+          <header class="dialog-header">
+            <div>
+              <p class="page-eyebrow" x-text="$store.onscreenAgent.creatorDialogMode === 'theme' ? 'Theme Creator' : 'Character Creator'"></p>
+              <h2 x-text="$store.onscreenAgent.creatorDialogMode === 'theme' ? 'Design your theme' : 'Design your character'"></h2>
+            </div>
+            <button type="button" class="dialog-close-button" x-on:click="$store.onscreenAgent.closeCreatorDialog()">&times;</button>
+          </header>
+          <div class="dialog-scroll-body">
+
+            <!-- THEME CREATOR -->
+            <div x-show="$store.onscreenAgent.creatorDialogMode === 'theme'" x-cloak>
+              <label class="field">
+                <span>Theme ID</span>
+                <input type="text" x-model="$store.onscreenAgent.creatorDraftTheme.id" placeholder="custom-my-theme" />
+              </label>
+              <label class="field">
+                <span>Display Name</span>
+                <input type="text" x-model="$store.onscreenAgent.creatorDraftTheme.label" placeholder="My Theme" maxlength="40" />
+              </label>
+              <label class="field">
+                <span>Icon (emoji)</span>
+                <input type="text" x-model="$store.onscreenAgent.creatorDraftTheme.icon" placeholder="🎨" />
+              </label>
+              <label class="field">
+                <span>Description</span>
+                <input type="text" x-model="$store.onscreenAgent.creatorDraftTheme.description" placeholder="A short description" />
+              </label>
+              <label class="field">
+                <span>Base Palette</span>
+                <div class="creator-base-toggle">
+                  <button type="button"
+                    :class="{ 'is-active': $store.onscreenAgent.creatorDraftTheme.base === 'dark' }"
+                    x-on:click="$store.onscreenAgent.creatorDraftTheme.base = 'dark'">Dark</button>
+                  <button type="button"
+                    :class="{ 'is-active': $store.onscreenAgent.creatorDraftTheme.base === 'light' }"
+                    x-on:click="$store.onscreenAgent.creatorDraftTheme.base = 'light'">Light</button>
+                </div>
+              </label>
+              <details class="creator-color-section">
+                <summary><h3>Color Overrides</h3></summary>
+                <template x-for="colorKey in $store.onscreenAgent.themeColorKeys" :key="colorKey">
+                  <label class="field creator-color-field">
+                    <span x-text="colorKey"></span>
+                    <div class="creator-color-input-group">
+                      <input type="color"
+                        :value="$store.onscreenAgent.creatorDraftTheme.colors[colorKey] || $store.onscreenAgent.getBaseColor($store.onscreenAgent.creatorDraftTheme.base, colorKey)"
+                        x-on:input="$store.onscreenAgent.creatorDraftTheme.colors[colorKey] = $el.value"
+                      />
+                      <input type="text"
+                        :value="$store.onscreenAgent.creatorDraftTheme.colors[colorKey] || ''"
+                        x-on:change="$store.onscreenAgent.creatorDraftTheme.colors[colorKey] = $el.value"
+                        placeholder="inherit"
+                        class="creator-color-text"
+                      />
+                      <button type="button" class="secondary-button"
+                        x-on:click="delete $store.onscreenAgent.creatorDraftTheme.colors[colorKey]">Reset</button>
+                    </div>
+                  </label>
+                </template>
+              </details>
+              <div class="creator-preview">
+                <h3>Live Preview</h3>
+                <div class="creator-preview-box" :style="$store.onscreenAgent.creatorThemeColorPreviewStyle()">
+                  <div class="creator-preview-surface">
+                    <span class="creator-preview-text">Sample text preview</span>
+                    <button type="button" class="secondary-button">Button</button>
+                    <input type="text" placeholder="Input field" class="creator-preview-input" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CHARACTER CREATOR -->
+            <div x-show="$store.onscreenAgent.creatorDialogMode === 'character'" x-cloak>
+              <label class="field">
+                <span>Character ID</span>
+                <input type="text" x-model="$store.onscreenAgent.creatorDraftCharacter.id" placeholder="custom-my-character" />
+              </label>
+              <label class="field">
+                <span>Display Name</span>
+                <input type="text" x-model="$store.onscreenAgent.creatorDraftCharacter.name" placeholder="My Character" maxlength="30" />
+              </label>
+              <label class="field">
+                <span>Emoji</span>
+                <input type="text" x-model="$store.onscreenAgent.creatorDraftCharacter.emoji" placeholder="🙂" />
+              </label>
+              <label class="field">
+                <span>Description</span>
+                <input type="text" x-model="$store.onscreenAgent.creatorDraftCharacter.description" placeholder="A short description" maxlength="80" />
+              </label>
+              <label class="field">
+                <span>Avatar</span>
+                <div class="creator-avatar-field">
+                  <div class="creator-avatar-preview">
+                    <img x-show="$store.onscreenAgent.creatorDraftCharacter.avatar"
+                      :src="$store.onscreenAgent.creatorDraftCharacter.avatar" alt="avatar" />
+                    <span x-show="!$store.onscreenAgent.creatorDraftCharacter.avatar"
+                      class="creator-avatar-emoji"
+                      x-text="$store.onscreenAgent.creatorDraftCharacter.emoji"></span>
+                  </div>
+                  <input type="file" accept="image/*" class="creator-avatar-input"
+                    x-on:change="$store.onscreenAgent.creatorHandleAvatarUpload($event)" />
+                  <button type="button" class="secondary-button"
+                    x-on:click="$store.onscreenAgent.creatorDraftCharacter.avatar = ''">Clear</button>
+                </div>
+              </label>
+              <label class="field">
+                <span>Avatar URL (optional)</span>
+                <input type="text" x-model="$store.onscreenAgent.creatorDraftCharacter.avatar" placeholder="https://..." />
+              </label>
+              <label class="field">
+                <span>System Prompt Prefix</span>
+                <textarea x-model="$store.onscreenAgent.creatorDraftCharacter.systemPromptPrefix"
+                  placeholder="You are..." rows="4" maxlength="2000"></textarea>
+              </label>
+              <div class="creator-preview">
+                <h3>Live Preview</h3>
+                <div class="creator-preview-character-card">
+                  <div class="character-option">
+                    <img class="character-option-avatar"
+                      :src="$store.onscreenAgent.creatorDraftCharacter.avatar"
+                      x-show="$store.onscreenAgent.creatorDraftCharacter.avatar" />
+                    <span class="character-option-emoji"
+                      x-text="$store.onscreenAgent.creatorDraftCharacter.emoji"
+                      x-show="!$store.onscreenAgent.creatorDraftCharacter.avatar"></span>
+                    <span class="character-option-label"
+                      x-text="$store.onscreenAgent.creatorDraftCharacter.name || 'Character Name'"></span>
+                  </div>
+                  <p class="creator-preview-description"
+                    x-text="$store.onscreenAgent.creatorDraftCharacter.description || 'Character description'"></p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <footer class="dialog-footer">
+            <button type="button" class="secondary-button"
+              x-show="$store.onscreenAgent.creatorEditingId"
+              x-on:click="$store.onscreenAgent.creatorDeleteCurrentItem()"
+              style="color: var(--color-status-danger)">
+              Delete
+            </button>
+            <div style="flex:1"></div>
+            <button type="button" class="secondary-button" x-on:click="$store.onscreenAgent.closeCreatorDialog()">Cancel</button>
+            <button type="button" class="primary-button"
+              x-text="$store.onscreenAgent.creatorDialogMode === 'theme'
+                ? ($store.onscreenAgent.creatorEditingId ? 'Update Theme' : 'Save Theme')
+                : ($store.onscreenAgent.creatorEditingId ? 'Update Character' : 'Save Character')"
+              x-on:click="$store.onscreenAgent.creatorDialogMode === 'theme'
+                ? $store.onscreenAgent.creatorSaveTheme()
+                : $store.onscreenAgent.creatorSaveCharacter()"
+            ></button>
+          </footer>
+        </form>
+      </dialog>
+
     </div>
   </body>
 </html>

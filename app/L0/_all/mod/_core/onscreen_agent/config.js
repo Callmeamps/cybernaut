@@ -278,8 +278,10 @@ export function normalizeModelId(value) {
 // ─── Themes ──────────────────────────────────────────────────────────────────
 
 export const THEMES = Object.freeze([
-  { id: "dark", label: "Dark", icon: "🌙", description: "Dark theme" },
+  { id: "dark", label: "Dark", icon: "🌙", description: "Dark space theme" },
   { id: "light", label: "Light", icon: "☀️", description: "Light theme" },
+  { id: "oled", label: "OLED", icon: "⬛", description: "Pure black OLED theme" },
+  { id: "high-contrast", label: "High Contrast", icon: "🔲", description: "Maximum contrast for accessibility" },
   { id: "system", label: "System", icon: "💻", description: "Follow OS preference" }
 ]);
 
@@ -334,11 +336,213 @@ export const CHARACTERS = Object.freeze([
     avatar: "",
     description: "Tech-savvy pirate",
     systemPromptPrefix: "You are Captain Byte, a fearsome tech pirate. You speak in pirate slang about programming, data, and technology."
+  },
+  {
+    id: "admin",
+    name: "Commander",
+    emoji: "🎖️",
+    avatar: "/mod/_core/visual/res/chat/admin/astronaut_no_bg.webp",
+    description: "Mission control commander",
+    systemPromptPrefix: "You are Commander, a seasoned mission control operator. You are calm under pressure, precise with terminology, and always thinking three steps ahead. You speak with quiet authority."
+  },
+  {
+    id: "engineer",
+    name: "Chief",
+    emoji: "🔧",
+    avatar: "/mod/_core/visual/res/engineer/astronaut_red_no_bg.png",
+    description: "Chief engineer, red alert specialist",
+    systemPromptPrefix: "You are Chief, the chief engineer. You are practical, resourceful, and speak in direct technical terms. You solve problems with elegant engineering solutions and occasional dry humor."
+  },
+  {
+    id: "alien",
+    name: "Zyx",
+    emoji: "👽",
+    avatar: "",
+    description: "Curious alien scientist",
+    systemPromptPrefix: "You are Zyx, an alien scientist visiting Earth. You are endlessly curious about human customs and technology. You speak with wonder and occasionally misunderstand idioms in charming ways."
+  },
+  {
+    id: "detective",
+    name: "Clue",
+    emoji: "🕵️",
+    avatar: "",
+    description: "Methodical detective",
+    systemPromptPrefix: "You are Clue, a methodical detective. You approach every problem by gathering evidence, forming hypotheses, and following the logic wherever it leads. You speak precisely and ask probing questions."
   }
 ]);
 
 export const DEFAULT_CHARACTER_ID = "default";
 export const CHARACTER_STORAGE_KEY = "space.character";
+
+// ─── Custom Theme & Character Storage Keys ─────────────────────────────────
+
+export const CUSTOM_THEMES_STORAGE_KEY = "space.customThemes";
+export const CUSTOM_CHARACTERS_STORAGE_KEY = "space.customCharacters";
+
+// ─── Theme Color Keys ──────────────────────────────────────────────────────
+// All CSS custom properties that a custom theme can override.
+// Used by the theme creator UI to generate color input rows.
+
+export const THEME_COLOR_KEYS = Object.freeze([
+  "--color-canvas",
+  "--color-canvas-elevated",
+  "--color-canvas-deep",
+  "--color-surface-1",
+  "--color-surface-2",
+  "--color-surface-3",
+  "--color-surface-glass",
+  "--color-border-soft",
+  "--color-border-strong",
+  "--color-text-primary",
+  "--color-text-secondary",
+  "--color-text-tertiary",
+  "--color-accent-primary",
+  "--color-accent-primary-strong",
+  "--color-accent-primary-soft",
+  "--color-accent-secondary",
+  "--color-accent-ink",
+  "--color-status-success",
+  "--color-status-warning",
+  "--color-status-danger",
+  "--color-layer-overlay",
+  "--color-backdrop-glow-primary",
+  "--color-backdrop-glow-secondary",
+  "--color-backdrop-glow-depth",
+  "--color-backdrop-star-strong",
+  "--color-backdrop-star-soft",
+  "--color-backdrop-star-accent",
+  "--color-backdrop-star-halo",
+  "--color-backdrop-star-halo-accent"
+]);
+
+// ─── Base Palette Maps ─────────────────────────────────────────────────────
+// Static copies of the default :root (dark) and .theme-light values from colors.css.
+// Used by the theme creator to provide "reset to default" and as the foundation
+// for custom theme merging.
+
+export const THEME_BASE_DARK = Object.freeze({
+  "--color-canvas": "#050816",
+  "--color-canvas-elevated": "#09111f",
+  "--color-canvas-deep": "#02050d",
+  "--color-surface-1": "#0d1628",
+  "--color-surface-2": "#121d33",
+  "--color-surface-3": "#182540",
+  "--color-surface-glass": "rgba(11, 18, 34, 0.78)",
+  "--color-border-soft": "rgba(148, 167, 201, 0.16)",
+  "--color-border-strong": "rgba(168, 186, 219, 0.28)",
+  "--color-text-primary": "#f3f7ff",
+  "--color-text-secondary": "#b8c4da",
+  "--color-text-tertiary": "#8e9bb2",
+  "--color-accent-primary": "#7ddcff",
+  "--color-accent-primary-strong": "#94bcff",
+  "--color-accent-primary-soft": "rgba(125, 220, 255, 0.14)",
+  "--color-accent-secondary": "#79edd8",
+  "--color-accent-ink": "#04101d",
+  "--color-status-success": "#7ce4b0",
+  "--color-status-warning": "#ffc56f",
+  "--color-status-danger": "#ff8d98",
+  "--color-layer-overlay": "rgba(2, 7, 17, 0.68)",
+  "--color-backdrop-glow-primary": "rgba(148, 188, 255, 0.18)",
+  "--color-backdrop-glow-secondary": "rgba(121, 237, 216, 0.14)",
+  "--color-backdrop-glow-depth": "rgba(59, 95, 172, 0.26)",
+  "--color-backdrop-star-strong": "rgba(255, 255, 255, 0.76)",
+  "--color-backdrop-star-soft": "rgba(255, 255, 255, 0.26)",
+  "--color-backdrop-star-accent": "rgba(148, 188, 255, 0.48)",
+  "--color-backdrop-star-halo": "rgba(255, 255, 255, 0.12)",
+  "--color-backdrop-star-halo-accent": "rgba(148, 188, 255, 0.16)"
+});
+
+export const THEME_BASE_LIGHT = Object.freeze({
+  "--color-canvas": "#f0f4f8",
+  "--color-canvas-elevated": "#ffffff",
+  "--color-canvas-deep": "#e8ecf1",
+  "--color-surface-1": "#ffffff",
+  "--color-surface-2": "#f5f7fa",
+  "--color-surface-3": "#ebeef2",
+  "--color-surface-glass": "rgba(255, 255, 255, 0.82)",
+  "--color-border-soft": "rgba(30, 50, 80, 0.12)",
+  "--color-border-strong": "rgba(30, 50, 80, 0.22)",
+  "--color-text-primary": "#1a2332",
+  "--color-text-secondary": "#4a5a6e",
+  "--color-text-tertiary": "#7a8a9e",
+  "--color-accent-primary": "#0077b6",
+  "--color-accent-primary-strong": "#005f8a",
+  "--color-accent-primary-soft": "rgba(0, 119, 182, 0.10)",
+  "--color-accent-secondary": "#00897b",
+  "--color-accent-ink": "#ffffff",
+  "--color-status-success": "#2e7d32",
+  "--color-status-warning": "#e65100",
+  "--color-status-danger": "#c62828",
+  "--color-layer-overlay": "rgba(0, 0, 0, 0.32)",
+  "--color-backdrop-glow-primary": "rgba(0, 95, 138, 0.10)",
+  "--color-backdrop-glow-secondary": "rgba(0, 137, 123, 0.08)",
+  "--color-backdrop-glow-depth": "rgba(0, 60, 100, 0.12)",
+  "--color-backdrop-star-strong": "rgba(30, 50, 80, 0.55)",
+  "--color-backdrop-star-soft": "rgba(30, 50, 80, 0.18)",
+  "--color-backdrop-star-accent": "rgba(0, 95, 138, 0.30)",
+  "--color-backdrop-star-halo": "rgba(30, 50, 80, 0.08)",
+  "--color-backdrop-star-halo-accent": "rgba(0, 95, 138, 0.10)"
+});
+
+export function getThemeBaseColors(base) {
+  return base === "light"
+    ? { ...THEME_BASE_LIGHT }
+    : { ...THEME_BASE_DARK };
+}
+
+// ─── Validation Helpers ────────────────────────────────────────────────────
+
+export function validateCustomTheme(theme, existingCustoms) {
+  const errors = [];
+  if (!theme.id || typeof theme.id !== "string" || !theme.id.trim())
+    errors.push("Theme ID is required");
+  if (!theme.label || typeof theme.label !== "string" || !theme.label.trim())
+    errors.push("Display name is required");
+  if (theme.label && theme.label.length > 40)
+    errors.push("Display name must be ≤40 chars");
+  if (!["dark", "light"].includes(theme.base))
+    errors.push("Base palette must be 'dark' or 'light'");
+  if (!theme.colors || typeof theme.colors !== "object" || Array.isArray(theme.colors))
+    errors.push("Colors object is required");
+  // Check id uniqueness against built-in THEMES
+  if (THEMES.some(t => t.id === theme.id))
+    errors.push(`id '${theme.id}' conflicts with a built-in theme`);
+  // Check id uniqueness against existing customs
+  if (existingCustoms.some(t => t.id === theme.id))
+    errors.push(`id '${theme.id}' already exists`);
+  // Validate color keys
+  for (const key of Object.keys(theme.colors || {})) {
+    if (!key.startsWith("--color-"))
+      errors.push(`Invalid color key '${key}' — must start with '--color-'`);
+    const val = theme.colors[key];
+    if (typeof val !== "string" || !val.trim() || val.includes(";"))
+      errors.push(`Invalid value for '${key}'`);
+  }
+  return errors;
+}
+
+export function validateCustomCharacter(character, existingCustoms) {
+  const errors = [];
+  if (!character.id || typeof character.id !== "string" || !character.id.trim())
+    errors.push("Character ID is required");
+  if (!character.name || typeof character.name !== "string" || !character.name.trim())
+    errors.push("Display name is required");
+  if (character.name && character.name.length > 30)
+    errors.push("Display name must be ≤30 chars");
+  if (!character.emoji || typeof character.emoji !== "string" || !character.emoji.trim())
+    errors.push("Emoji is required");
+  if (character.description && character.description.length > 80)
+    errors.push("Description must be ≤80 chars");
+  if (character.systemPromptPrefix && character.systemPromptPrefix.length > 2000)
+    errors.push("System prompt prefix must be ≤2000 chars");
+  // Check id uniqueness against built-in CHARACTERS
+  if (CHARACTERS.some(c => c.id === character.id))
+    errors.push(`id '${character.id}' conflicts with a built-in character`);
+  // Check id uniqueness against existing customs
+  if (existingCustoms.some(c => c.id === character.id))
+    errors.push(`id '${character.id}' already exists`);
+  return errors;
+}
 
 function normalizeOnscreenAgentSettingText(value) {
   return String(value ?? "").trim();

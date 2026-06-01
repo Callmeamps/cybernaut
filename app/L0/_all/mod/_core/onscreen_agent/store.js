@@ -23,19 +23,81 @@ import {
   MODELS, MODEL_GROUPS, MODELS_BY_ID, isCustomModel as isCustomModelRecord,
   getModelDefaultEndpoint, DEFAULT_ONSCREEN_AGENT_SETTINGS as configDefaultSettings,
   THEMES, DEFAULT_THEME, THEME_STORAGE_KEY,
-  CHARACTERS, DEFAULT_CHARACTER_ID, CHARACTER_STORAGE_KEY
+  CHARACTERS, DEFAULT_CHARACTER_ID, CHARACTER_STORAGE_KEY,
+  CUSTOM_THEMES_STORAGE_KEY, CUSTOM_CHARACTERS_STORAGE_KEY,
+  THEME_COLOR_KEYS, getThemeBaseColors,
+  validateCustomTheme, validateCustomCharacter
 } from "/mod/_core/onscreen_agent/config.js";
+
+function loadCustomThemes() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_THEMES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
+}
+
+function loadCustomCharacters() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_CHARACTERS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
+}
+
+function injectCustomThemeStyle(theme) {
+  // Remove any previously injected custom theme style
+  document.querySelectorAll("style[data-custom-theme]").forEach(el => el.remove());
+  if (!theme || !theme.colors) return;
+  const baseColors = getThemeBaseColors(theme.base);
+  const mergedColors = { ...baseColors, ...theme.colors };
+  const cssVars = Object.entries(mergedColors)
+    .map(([k, v]) => `    ${k}: ${v};`)
+    .join("\n");
+  const styleEl = document.createElement("style");
+  styleEl.setAttribute("data-custom-theme", theme.id);
+  styleEl.textContent = `:root {\n${cssVars}\n}`;
+  document.head.appendChild(styleEl);
+}
 
 function applyTheme(themeId) {
   const root = document.documentElement;
-  root.classList.remove("theme-light");
-  if (themeId === "light") {
+  // Remove all theme classes first
+  root.classList.remove("theme-light", "theme-oled", "theme-high-contrast");
+
+  // Check if it's a custom theme
+  const customThemes = loadCustomThemes();
+  const custom = customThemes.find(t => t.id === themeId);
+
+  if (custom) {
+    // Remove any previously injected custom theme style
+    document.querySelectorAll("style[data-custom-theme]").forEach(el => el.remove());
+    injectCustomThemeStyle(custom);
+    if (custom.base === "light") {
+      root.classList.add("theme-light");
+    }
+  } else if (themeId === "light") {
+    document.querySelectorAll("style[data-custom-theme]").forEach(el => el.remove());
     root.classList.add("theme-light");
   } else if (themeId === "system") {
+    document.querySelectorAll("style[data-custom-theme]").forEach(el => el.remove());
     const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
     if (prefersLight) {
       root.classList.add("theme-light");
     }
+  } else {
+    // Remove any injected custom style for all non-custom themes
+    document.querySelectorAll("style[data-custom-theme]").forEach(el => el.remove());
+    // Class-based built-in themes (oled, high-contrast, etc.)
+    if (themeId.startsWith("theme-") || themeId === "oled" || themeId === "high-contrast") {
+      const cls = themeId.startsWith("theme-") ? themeId : "theme-" + themeId;
+      if (root.classList.contains(cls) === false) {
+        root.classList.add(cls);
+      }
+    }
+    // "dark" needs no class — it's the default :root
   }
   // Persist to localStorage for fast reload
   try { localStorage.setItem(THEME_STORAGE_KEY, themeId); } catch {}
@@ -51,18 +113,33 @@ function resolveEffectiveTheme(themeId) {
   return themeId || DEFAULT_THEME;
 }
 
-function findCharacter(characterId) {
-  return CHARACTERS.find((c) => c.id === characterId) || CHARACTERS[0];
+function findTheme(themeId) {
+  const merged = [...THEMES, ...loadCustomThemes()];
+  return merged.find(t => t.id === themeId) || THEMES[0];
 }
 
-function findTheme(themeId) {
-  return THEMES.find((t) => t.id === themeId) || THEMES[0];
+function findCharacter(characterId) {
+  const merged = [...CHARACTERS, ...loadCustomCharacters()];
+  return merged.find(c => c.id === characterId) || CHARACTERS[0];
+}
+
+function isCustomTheme(id) {
+  return loadCustomThemes().some(t => t.id === id);
+}
+
+function isCustomCharacter(id) {
+  return loadCustomCharacters().some(c => c.id === id);
 }
 
 function loadPersistedTheme() {
   try {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    if (stored && THEMES.some((t) => t.id === stored)) return stored;
+    if (!stored) return null;
+    // Check built-in
+    if (THEMES.some(t => t.id === stored)) return stored;
+    // Check custom
+    const customs = loadCustomThemes();
+    if (customs.some(t => t.id === stored)) return stored;
   } catch {}
   return null;
 }
@@ -70,7 +147,10 @@ function loadPersistedTheme() {
 function loadPersistedCharacter() {
   try {
     const stored = localStorage.getItem(CHARACTER_STORAGE_KEY);
-    if (stored && CHARACTERS.some((c) => c.id === stored)) return stored;
+    if (!stored) return null;
+    if (CHARACTERS.some(c => c.id === stored)) return stored;
+    const customs = loadCustomCharacters();
+    if (customs.some(c => c.id === stored)) return stored;
   } catch {}
   return null;
 }
@@ -1712,10 +1792,21 @@ const model = {
     this.settingsDraft = { ...this.settingsDraft, model: value };
   },
 
+  // ─── Theme & Character Color Keys ─────────────────────────────────────────
+
+  get themeColorKeys() {
+    return THEME_COLOR_KEYS;
+  },
+
+  getBaseColor(base, colorKey) {
+    const palette = getThemeBaseColors(base);
+    return palette[colorKey] || "";
+  },
+
   // ─── Themes ───────────────────────────────────────────────────────────────
 
   get themes() {
-    return THEMES;
+    return [...THEMES, ...loadCustomThemes()];
   },
 
   get effectiveTheme() {
@@ -1730,7 +1821,7 @@ const model = {
   // ─── Characters ───────────────────────────────────────────────────────────
 
   get characters() {
-    return CHARACTERS;
+    return [...CHARACTERS, ...loadCustomCharacters()];
   },
 
   get currentCharacter() {
@@ -1758,6 +1849,264 @@ const model = {
     // Store for persistence
     this._characterAvatar = character.avatar;
     this._characterEmoji = character.emoji;
+  },
+
+  // ─── Custom Theme CRUD ─────────────────────────────────────────────────
+
+  getCustomThemes() {
+    return loadCustomThemes();
+  },
+
+  getCustomCharacters() {
+    return loadCustomCharacters();
+  },
+
+  isCustomTheme(id) {
+    return loadCustomThemes().some(t => t.id === id);
+  },
+
+  isCustomCharacter(id) {
+    return loadCustomCharacters().some(c => c.id === id);
+  },
+
+  createCustomTheme(themeInput) {
+    const customs = loadCustomThemes();
+    const errors = validateCustomTheme(themeInput, customs);
+    if (errors.length > 0) return { success: false, errors };
+
+    const theme = {
+      id: String(themeInput.id).trim(),
+      label: String(themeInput.label).trim(),
+      icon: String(themeInput.icon || "\uD83C\uDFA8").trim(),
+      description: String(themeInput.description || "").trim(),
+      base: themeInput.base === "light" ? "light" : "dark",
+      colors: { ...themeInput.colors }
+    };
+
+    customs.push(theme);
+    try { localStorage.setItem(CUSTOM_THEMES_STORAGE_KEY, JSON.stringify(customs)); } catch (e) {}
+
+    injectCustomThemeStyle(theme);
+
+    this.render();
+    return { success: true, theme };
+  },
+
+  updateCustomTheme(themeId, updates) {
+    const customs = loadCustomThemes();
+    const idx = customs.findIndex(t => t.id === themeId);
+    if (idx === -1) return { success: false, errors: ["Theme not found"] };
+
+    const updated = { ...customs[idx], ...updates };
+    updated.id = themeId;
+    const errors = validateCustomTheme(updated, customs.filter((_, i) => i !== idx));
+    if (errors.length > 0) return { success: false, errors };
+
+    customs[idx] = updated;
+    try { localStorage.setItem(CUSTOM_THEMES_STORAGE_KEY, JSON.stringify(customs)); } catch (e) {}
+
+    var oldStyles = document.querySelectorAll("style[data-custom-theme]");
+    oldStyles.forEach(function(el) { el.remove(); });
+    if (this.settings.theme === themeId) injectCustomThemeStyle(updated);
+
+    this.render();
+    return { success: true, theme: updated };
+  },
+
+  deleteCustomTheme(themeId) {
+    var customs = loadCustomThemes().filter(function(t) { return t.id !== themeId; });
+    try { localStorage.setItem(CUSTOM_THEMES_STORAGE_KEY, JSON.stringify(customs)); } catch (e) {}
+
+    var injected = document.querySelectorAll("style[data-custom-theme]");
+    injected.forEach(function(el) { el.remove(); });
+
+    if (this.settings.theme === themeId) {
+      this.settings.theme = DEFAULT_THEME;
+      this.settingsDraft = { ...this.settingsDraft, theme: DEFAULT_THEME };
+      applyTheme(DEFAULT_THEME);
+    }
+
+    this.render();
+    return { success: true };
+  },
+
+  // ─── Custom Character CRUD ─────────────────────────────────────────────
+
+  createCustomCharacter(charInput) {
+    const customs = loadCustomCharacters();
+    const errors = validateCustomCharacter(charInput, customs);
+    if (errors.length > 0) return { success: false, errors };
+
+    const character = {
+      id: String(charInput.id).trim(),
+      name: String(charInput.name).trim(),
+      emoji: String(charInput.emoji || "\uD83D\uDE42").trim(),
+      description: String(charInput.description || "").trim(),
+      avatar: String(charInput.avatar || "").trim(),
+      systemPromptPrefix: String(charInput.systemPromptPrefix || "").trim()
+    };
+
+    customs.push(character);
+    try { localStorage.setItem(CUSTOM_CHARACTERS_STORAGE_KEY, JSON.stringify(customs)); } catch (e) {}
+
+    this.render();
+    return { success: true, character };
+  },
+
+  updateCharacter(characterId, updates) {
+    const customs = loadCustomCharacters();
+    const idx = customs.findIndex(function(c) { return c.id === characterId; });
+    if (idx === -1) return { success: false, errors: ["Character not found"] };
+
+    const updated = { ...customs[idx], ...updates };
+    updated.id = characterId;
+    const errors = validateCustomCharacter(updated, customs.filter(function(_, i) { return i !== idx; }));
+    if (errors.length > 0) return { success: false, errors };
+
+    customs[idx] = updated;
+    try { localStorage.setItem(CUSTOM_CHARACTERS_STORAGE_KEY, JSON.stringify(customs)); } catch (e) {}
+
+    if (this.settings.characterId === characterId) {
+      this.applyCharacterAvatar(updated);
+    }
+
+    this.render();
+    return { success: true, character: updated };
+  },
+
+  deleteCustomCharacter(characterId) {
+    var customs = loadCustomCharacters().filter(function(c) { return c.id !== characterId; });
+    try { localStorage.setItem(CUSTOM_CHARACTERS_STORAGE_KEY, JSON.stringify(customs)); } catch (e) {}
+
+    if (this.settings.characterId === characterId) {
+      this.settings.characterId = DEFAULT_CHARACTER_ID;
+      this.settingsDraft = { ...this.settingsDraft, characterId: DEFAULT_CHARACTER_ID };
+      var fallback = findCharacter(DEFAULT_CHARACTER_ID);
+      this.applyCharacterAvatar(fallback);
+    }
+
+    this.render();
+    return { success: true };
+  },
+
+  // ─── Creator Dialog State ──────────────────────────────────────────────
+
+  creatorDialogMode: "",
+  creatorEditingId: null,
+  creatorDraftTheme: null,
+  creatorDraftCharacter: null,
+
+  openCreatorDialog(mode, editId) {
+    if (editId === undefined) editId = null;
+    this.creatorDialogMode = mode;
+    this.creatorEditingId = editId;
+    if (mode === "theme") {
+      if (editId) {
+        var existing = loadCustomThemes().find(function(t) { return t.id === editId; });
+        this.creatorDraftTheme = existing ? { ...existing, colors: { ...existing.colors } } : this._createEmptyThemeDraft();
+      } else {
+        this.creatorDraftTheme = this._createEmptyThemeDraft();
+      }
+    } else if (mode === "character") {
+      if (editId) {
+        var existing = loadCustomCharacters().find(function(c) { return c.id === editId; });
+        this.creatorDraftCharacter = existing ? { ...existing } : this._createEmptyCharacterDraft();
+      } else {
+        this.creatorDraftCharacter = this._createEmptyCharacterDraft();
+      }
+    }
+    this._creatorDialogOpen = true;
+  },
+
+  closeCreatorDialog() {
+    this._creatorDialogOpen = false;
+    this.creatorDialogMode = "";
+    this.creatorEditingId = null;
+    this.creatorDraftTheme = null;
+    this.creatorDraftCharacter = null;
+  },
+
+  get isCreatorDialogOpen() {
+    return this._creatorDialogOpen === true;
+  },
+
+  _createEmptyThemeDraft() {
+    return {
+      id: "custom-",
+      label: "",
+      icon: "\uD83C\uDFA8",
+      description: "",
+      base: "dark",
+      colors: {}
+    };
+  },
+
+  _createEmptyCharacterDraft() {
+    return {
+      id: "custom-",
+      name: "",
+      emoji: "\uD83D\uDE42",
+      description: "",
+      avatar: "",
+      systemPromptPrefix: ""
+    };
+  },
+
+  creatorThemeColorPreviewStyle() {
+    if (!this.creatorDraftTheme) return "";
+    var baseColors = getThemeBaseColors(this.creatorDraftTheme.base);
+    var merged = { ...baseColors, ...this.creatorDraftTheme.colors };
+    return Object.entries(merged).map(function(entry) { return entry[0] + ":" + entry[1]; }).join(";");
+  },
+
+  creatorHandleAvatarUpload(event) {
+    var file = event && event.target && event.target.files && event.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = () => {
+      if (this.creatorDraftCharacter) {
+        this.creatorDraftCharacter.avatar = reader.result;
+      }
+    };
+    reader.readAsDataURL(file);
+  },
+
+  creatorSaveTheme() {
+    if (!this.creatorDraftTheme) return;
+    var result = this.creatorEditingId
+      ? this.updateCustomTheme(this.creatorEditingId, this.creatorDraftTheme)
+      : this.createCustomTheme(this.creatorDraftTheme);
+    if (result.success) {
+      this.closeCreatorDialog();
+      showToast(this.creatorEditingId ? "Theme updated!" : "Theme created!", { tone: "success" });
+    } else {
+      showToast(result.errors.join("; "), { tone: "error" });
+    }
+  },
+
+  creatorSaveCharacter() {
+    if (!this.creatorDraftCharacter) return;
+    var result = this.creatorEditingId
+      ? this.updateCharacter(this.creatorEditingId, this.creatorDraftCharacter)
+      : this.createCustomCharacter(this.creatorDraftCharacter);
+    if (result.success) {
+      this.closeCreatorDialog();
+      showToast(this.creatorEditingId ? "Character updated!" : "Character created!", { tone: "success" });
+    } else {
+      showToast(result.errors.join("; "), { tone: "error" });
+    }
+  },
+
+  creatorDeleteCurrentItem() {
+    if (this.creatorDialogMode === "theme" && this.creatorEditingId) {
+      this.deleteCustomTheme(this.creatorEditingId);
+      this.closeCreatorDialog();
+      showToast("Theme deleted.", { tone: "success" });
+    } else if (this.creatorDialogMode === "character" && this.creatorEditingId) {
+      this.deleteCustomCharacter(this.creatorEditingId);
+      this.closeCreatorDialog();
+      showToast("Character deleted.", { tone: "success" });
+    }
   },
 
   get isSettingsDraftUsingApiProvider() {

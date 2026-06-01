@@ -193,6 +193,48 @@ Prompt rules:
 - `prompts/compact-prompt.md` is used for user-triggered history compaction
 - `prompts/compact-prompt-auto.md` is used for automatic compaction during the loop
 
+## Themes, Characters & Creator
+
+### Built-in Themes
+
+| ID | Label | CSS Class | Description |
+|----|-------|-----------|-------------|
+| `dark` | Dark | *(default)* | Default space palette (`#050816` canvas) |
+| `light` | Light | `.theme-light` | Light mode |
+| `oled` | OLED | `.theme-oled` | Pure black (`#000000`) canvas, muted surfaces, same accents |
+| `high-contrast` | High Contrast | `.theme-high-contrast` | Maximum contrast white-on-black, bold accents, strong borders |
+| `system` | System | resolved at runtime | Follows `prefers-color-scheme` |
+
+Built-in themes are defined in `config.js` as `THEMES`. Class-based themes (`oled`, `high-contrast`) have palette definitions in `_core/framework/css/colors.css`. Active theme is persisted to `localStorage["space.theme"]` and server YAML.
+
+### Built-in Characters
+
+| ID | Name | Emoji | Avatar |
+|----|------|-------|--------|
+| `default` | Space Agent | 🤖 | `res/chat/overlay/astronaut_no_bg.webp` |
+| `robot` | BEEP-BOOP | 🦾 | *(emoji)* |
+| `sage` | Sage | 🧙 | *(emoji)* |
+| `cat` | Whiskers | 🐱 | *(emoji)* |
+| `professional` | Atlas | 💼 | *(emoji)* |
+| `pirate` | Captain Byte | 🏴‍☠️ | *(emoji)* |
+| `admin` | Commander | 🎖️ | `res/chat/admin/astronaut_no_bg.webp` |
+| `engineer` | Chief | 🔧 | `res/engineer/astronaut_red_no_bg.png` |
+| `alien` | Zyx | 👽 | *(emoji)* |
+| `detective` | Clue | 🕵️ | *(emoji)* |
+
+Characters are defined in `config.js` as `CHARACTERS`. Active character is persisted to `localStorage["space.character"]` and server YAML. Character `systemPromptPrefix` is prepended to the system prompt on save.
+
+### Theme & Character Creator
+
+The creator wizard lets users and agents create custom themes and characters from the settings dialog. Full agent API reference: `CREATOR_API.md`.
+
+Key points:
+- Custom themes inject `<style data-custom-theme="{id}">` into `<head>` (base palette + overrides merged)
+- Custom characters persist as JSON objects
+- Both stored in localStorage only (`"space.customThemes"`, `"space.customCharacters"`)
+- CRUD via `$store.onscreenAgent.createCustomTheme({...})`, `createCustomCharacter({...})`, etc.
+- Built-in items are immutable; custom items get edit/delete buttons in the selector
+
 ## JS Extension Seams
 
 Overlay chat behavior is intentionally extensible through `ext/js/` hooks rather than private store patching.
